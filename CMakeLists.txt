@@ -5,11 +5,21 @@ project(${DIR_NAME})
 
 find_package(fpmas 1.1 REQUIRED)
 
+include(FetchContent)
+FetchContent_Declare(
+	yaml-cpp
+	GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+	GIT_TAG yaml-cpp-0.7.0
+	)
+FetchContent_MakeAvailable(yaml-cpp)
+
 add_executable(${PROJECT_NAME}
 	main.cpp
 	src/agents.cpp
-	src/benchmark.cpp)
+	src/benchmark.cpp
+	src/config.cpp
+	src/output.cpp)
 include_directories(include)
 
-target_link_libraries(${PROJECT_NAME} fpmas::fpmas)
+target_link_libraries(${PROJECT_NAME} fpmas::fpmas yaml-cpp::yaml-cpp)
 

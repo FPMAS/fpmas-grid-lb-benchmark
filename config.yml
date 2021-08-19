@@ -1,0 +1,30 @@
+# Grid size
+grid_width: 100
+grid_height: 100
+
+# Used to compute the agent count
+occupation_rate: 0.5
+
+# Number of steps to execute
+num_steps: 100
+
+# Cell utility distribution policy: UNIFORM or CLUSTERED
+cell_distribution: CLUSTERED
+
+# If CLUSTERED, defines a list of attractors.
+# An attractor is defined as [[x, y], radius]
+attractors: 
+  - [[20, 20], 100]
+  - [[80, 80], 100]
+
+
+# Test cases list
+# A Test case is defined as [ALGORITHM, [lb_periods, ...]]
+# Available algorithms:
+# SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, RANDOM_LB
+test_cases:
+  - [SCHEDULED_LB, [10, 50]]
+  - [ZOLTAN_LB, [1, 10, 50]]
+  - [GRID_LB, [1, 10]]
+  - [ZOLTAN_CELL_LB, [1, 10, 50]]
+  - [RANDOM_LB, [50]]

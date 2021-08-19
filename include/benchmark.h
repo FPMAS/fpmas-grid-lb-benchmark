@@ -1,6 +1,6 @@
 #include "fpmas.h"
 #include "fpmas/utils/perf.h"
-#include "agents.h"
+#include "output.h"
 
 class LoadBalancingProbeTask : public fpmas::api::scheduler::Task {
 	private:
@@ -52,14 +52,6 @@ class LoadBalancingProbeTask : public fpmas::api::scheduler::Task {
 
 class TestCase;
 
-template<typename T>
-class Max {
-	public:
-		T operator()(const T& a, const T& b) {
-			return std::max(a, b);
-		}
-};
-
 typedef fpmas::io::CsvOutput<
 fpmas::scheduler::Date, // Time Step
 	unsigned int, // Partitioning time
@@ -85,24 +77,27 @@ class TestCase {
 		fpmas::model::Behavior<BenchmarkAgent> move_behavior {&BenchmarkAgent::move};
 
 	public:
-		fpmas::model::GridModel<fpmas::synchro::GhostMode> model;
-		std::string lb_algorithm;
+		fpmas::model::GridModel<fpmas::synchro::GhostMode, BenchmarkCell> model;
+		std::string lb_algorithm_name;
 		LoadBalancingProbe lb_probe;
 
 	private:
 		LoadBalancingCsvOutput csv_output;
+		CellsOutput cells_output;
+		AgentsOutput agents_output;
+		BenchmarkConfig config;
 
 	public:
 		TestCase(
-				std::string lb_algorithm_name,
-				std::size_t grid_width, std::size_t grid_height, float occupation_rate,
+				std::string lb_algorithm_name, BenchmarkConfig config,
 				fpmas::api::scheduler::Scheduler& scheduler,
 				fpmas::api::runtime::Runtime& runtime,
-				fpmas::api::model::LoadBalancing& lb_algorithm
+				fpmas::api::model::LoadBalancing& lb_algorithm,
+				fpmas::scheduler::TimeStep lb_period
 				);
 
 		void run() {
-			model.runtime().run(100);
+			model.runtime().run(config.num_steps);
 		}
 };
 

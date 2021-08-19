@@ -23,39 +23,59 @@ fpmas::graph::PartitionMap LoadBalancingProbe::balance(
 }
 
 TestCase::TestCase(
-		std::string lb_algorithm_name,
-		std::size_t grid_width, std::size_t grid_height, float occupation_rate,
+		std::string lb_algorithm_name, BenchmarkConfig config,
 		fpmas::api::scheduler::Scheduler& scheduler,
 		fpmas::api::runtime::Runtime& runtime,
-		fpmas::api::model::LoadBalancing& lb_algorithm
-		) : lb_algorithm(lb_algorithm_name), model(scheduler, runtime, lb_algorithm), lb_probe(model.graph(), lb_algorithm), csv_output(*this) {
+		fpmas::api::model::LoadBalancing& lb_algorithm,
+		fpmas::scheduler::TimeStep lb_period
+		) :
+	lb_algorithm_name(lb_algorithm_name + "-" + std::to_string(lb_period)),
+	model(scheduler, runtime, lb_algorithm),
+	lb_probe(model.graph(), lb_algorithm), csv_output(*this),
+	cells_output(model, this->lb_algorithm_name, config.grid_width, config.grid_height),
+	agents_output(model, this->lb_algorithm_name, config.grid_width, config.grid_height),
+	config(config) {
 		auto& cell_group = model.buildGroup(0, cell_behavior);
 		auto& agent_group = model.buildMoveGroup(1, move_behavior);
 
-		//fpmas::model::GridCellFactory<fpmas::api::model::GridCell> cell_factory;
-		fpmas::model::MooreGrid<>::Builder grid(grid_width, grid_height);
+		std::unique_ptr<fpmas::api::model::GridCellFactory<BenchmarkCell>> cell_factory;
+		switch(config.cell_distribution) {
+			case UNIFORM:
+				cell_factory.reset(new UniformBenchmarkCellFactory);
+				break;
+			case CLUSTERED:
+				cell_factory.reset(new ClusteredBenchmarkCellFactory(config.attractors));
+				break;
+		}
+		fpmas::model::MooreGrid<BenchmarkCell>::Builder grid(
+				*cell_factory, config.grid_width, config.grid_height);
 
-		grid.build(model, {cell_group});
+		auto local_cells = grid.build(model, {cell_group});
+		dump_grid(config.grid_width, config.grid_height, local_cells);
 
 		fpmas::model::UniformGridAgentMapping mapping(
-				grid_width, grid_height, grid_width * grid_height * occupation_rate
+				config.grid_width, config.grid_height,
+				config.grid_width * config.grid_height * config.occupation_rate
 				);
-		fpmas::model::GridAgentBuilder<> agent_builder;
+		fpmas::model::GridAgentBuilder<BenchmarkCell> agent_builder;
 		fpmas::model::DefaultSpatialAgentFactory<BenchmarkAgent> agent_factory;
 
 		agent_builder.build(model, {agent_group}, agent_factory, mapping);
 
 		model.graph().synchronize();
 
-		scheduler.schedule(0, 50, lb_probe.job);
+		scheduler.schedule(0, lb_period, lb_probe.job);
 		scheduler.schedule(0.1, 1, cell_group.jobs());
 		scheduler.schedule(0.2, 1, agent_group.jobs());
 		scheduler.schedule(0.3, 1, csv_output.job());
+		fpmas::scheduler::TimeStep last_lb_date = ((config.num_steps-1) / lb_period) * lb_period;
+		scheduler.schedule(last_lb_date + 0.01, cells_output.job());
+		scheduler.schedule(last_lb_date + 0.02, agents_output.job());
 }
 
 LoadBalancingCsvOutput::LoadBalancingCsvOutput(TestCase& test_case)
 	:
-		fpmas::io::FileOutput(test_case.lb_algorithm + ".%r.csv", test_case.model.getMpiCommunicator().getRank()),
+		fpmas::io::FileOutput(test_case.lb_algorithm_name + ".%r.csv", test_case.model.getMpiCommunicator().getRank()),
 		LbCsvOutput(*this,
 			{"TIME", [&test_case] {return test_case.model.runtime().currentDate();}},
 			{"BALANCE_TIME", [&test_case] {
