@@ -6,6 +6,27 @@ void dump_grid(
 		std::vector<BenchmarkCell*> local_cells
 		);
 
+class TestCase;
+
+typedef fpmas::io::CsvOutput<
+fpmas::scheduler::Date, // Time Step
+	unsigned int, // Partitioning time
+	unsigned int, // Distribution time
+	float, // Local Agents
+	float, // Local cells
+	float, // Distant agent edges
+	float // Distant cell edges
+	> LbCsvOutput;
+
+class LoadBalancingCsvOutput :
+	public fpmas::io::FileOutput,
+	public LbCsvOutput {
+		private:
+			fpmas::io::FileOutput file;
+		public:
+			LoadBalancingCsvOutput(TestCase& test_case);
+	};
+
 class CellsOutput : public fpmas::io::OutputBase {
 	private:
 		fpmas::io::DynamicFileOutput output_file;
