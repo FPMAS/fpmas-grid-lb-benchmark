@@ -5,12 +5,18 @@ import argparse
 import pathlib
 
 def plot_grid(grid):
-    plt.title("Grid shape")
+    plt.title("Utility")
     plt.pcolormesh(grid)
+    plt.tight_layout()
 
 def plot_cells(cells):
     plt.title("Cells location")
     plt.pcolormesh(cells)
+    def on_resize(event):
+        plt.figure(1).tight_layout()
+        plt.figure(1).canvas.draw()
+
+    cid = plt.figure(1).canvas.mpl_connect('resize_event', on_resize)
 
 def plot_agents(agent_files):
     agent_counts = []
@@ -27,18 +33,29 @@ def plot_agents(agent_files):
         m = config.m
     elif config.n is None:
         m = config.m
-        n = len(config.agent_files) / m
+        n = int(len(config.agent_files) / m)
     elif config.m is None:
         n = config.n
-        m = len(config.agent_files) / n
+        m = int(len(config.agent_files) / n)
 
     vmax = max([max([max(row) for row in matrix]) for matrix in
         agent_counts])
-    i = 1
-    for agent_count in agent_counts:
-        plt.subplot(m, n, i)
-        plt.pcolormesh(agent_count, cmap="Reds", vmin=0, vmax=vmax)
-        i+=1
+
+    fig, axes = plt.subplots(m, n, sharex=True, sharey=True,
+            squeeze=False)
+    i = 0
+    for x in range(m):
+        for y in range(n):
+            if(i >= len(agent_counts)):
+                break
+            axes[x][y].pcolormesh(agent_counts[i], cmap="Reds", vmin=0, vmax=vmax)
+            i+=1
+
+    def on_resize(event):
+        fig.tight_layout()
+        fig.canvas.draw()
+
+    cid = fig.canvas.mpl_connect('resize_event', on_resize)
 
 def build_arg_parser():
     parser = argparse.ArgumentParser()
@@ -70,12 +87,11 @@ if __name__ == "__main__":
         with open(config.grid_file) as json_file:
             grid = json.load(json_file)
             plot_grid(grid)
-            plt.figure()
     if config.cell_file is not None:
         with open(config.cell_file) as json_file:
+            plt.figure()
             cells = json.load(json_file)
             plot_cells(cells)
-            plt.figure()
     if config.agent_files is not None:
         plot_agents(config.agent_files)
 
