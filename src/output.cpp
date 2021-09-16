@@ -88,7 +88,8 @@ void CellsOutput::dump() {
 std::vector<std::vector<int>> CellsOutput::gather_cells() {
 	typedef std::pair<fpmas::model::DiscretePoint, int> CellLocation;
 
-	std::vector<fpmas::api::model::Agent*> local_cells = model.getGroup(0).localAgents();
+	std::vector<fpmas::api::model::Agent*> local_cells
+		= model.getGroup(CELL_GROUP).localAgents();
 	std::vector<CellLocation> local_cells_location;
 	for(auto cell : local_cells)
 		local_cells_location.push_back({
@@ -119,7 +120,7 @@ std::vector<std::vector<std::size_t>> AgentsOutput::gather_agents() {
 	for(auto& row : grid)
 		row.resize(grid_width, 0);
 
-	for(auto agent : model.getGroup(1).localAgents()) {
+	for(auto agent : model.getGroup(AGENT_GROUP).localAgents()) {
 		auto grid_agent = dynamic_cast<BenchmarkAgent*>(agent);
 		grid[grid_agent->locationPoint().y][grid_agent->locationPoint().x]++;
 	}
