@@ -103,16 +103,12 @@ std::vector<std::vector<int>> CellsOutput::gather_cells() {
 
 	std::vector<std::vector<int>> grid;
 	FPMAS_ON_PROC(fpmas::communication::WORLD, 0) {
-		fpmas::io::FileOutput cells_file {"cells.json"};
 		grid.resize(grid_height);
 		for(auto& row : grid)
 			row.resize(grid_width);
 
 		for(auto cell : global_cells)
 			grid[cell.first.y][cell.first.x] = cell.second;
-
-		fpmas::io::JsonOutput<decltype(grid)>(cells_file, [&grid] () {return grid;})
-			.dump();
 	}
 	return grid;
 }
