@@ -1,6 +1,9 @@
 #include "yaml-cpp/yaml.h"
 #include "fpmas/api/scheduler/scheduler.h"
 #include "fpmas/api/model/spatial/grid.h"
+#include "fpmas/utils/macros.h"
+
+FPMAS_DEFINE_GROUPS(AGENT_GROUP, CELL_GROUP);
 
 enum Utility {
 	UNIFORM, LINEAR, INVERSE, STEP

@@ -35,8 +35,8 @@ TestCase::TestCase(
 	cells_output(model, this->lb_algorithm_name, config.grid_width, config.grid_height),
 	agents_output(model, this->lb_algorithm_name, config.grid_width, config.grid_height),
 	config(config) {
-		auto& cell_group = model.buildGroup(0, cell_behavior);
-		auto& agent_group = model.buildMoveGroup(1, move_behavior);
+		auto& cell_group = model.buildGroup(CELL_GROUP, cell_behavior);
+		auto& agent_group = model.buildMoveGroup(AGENT_GROUP, move_behavior);
 
 		std::unique_ptr<UtilityFunction> utility_function;
 		switch(config.utility) {
@@ -75,7 +75,8 @@ TestCase::TestCase(
 		scheduler.schedule(0.1, 1, cell_group.jobs());
 		scheduler.schedule(0.2, 1, agent_group.jobs());
 		scheduler.schedule(0.3, 1, csv_output.job());
-		fpmas::scheduler::TimeStep last_lb_date = ((config.num_steps-1) / lb_period) * lb_period;
+		fpmas::scheduler::TimeStep last_lb_date
+			= ((config.num_steps-1) / lb_period) * lb_period;
 		scheduler.schedule(last_lb_date + 0.01, cells_output.job());
 		scheduler.schedule(last_lb_date + 0.02, agents_output.job());
 }
