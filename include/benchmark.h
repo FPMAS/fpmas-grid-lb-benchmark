@@ -19,7 +19,9 @@ class LoadBalancingProbeTask : public fpmas::api::scheduler::Task {
 
 		void run() override;
 
-}; class LoadBalancingProbe : public fpmas::api::graph::LoadBalancing<fpmas::model::AgentPtr> {
+};
+
+class LoadBalancingProbe : public fpmas::api::graph::LoadBalancing<fpmas::model::AgentPtr> {
 	private:
 		fpmas::api::graph::LoadBalancing<fpmas::model::AgentPtr>& lb;
 

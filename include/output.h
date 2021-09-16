@@ -1,5 +1,5 @@
 #include "fpmas/io/json_output.h"
-#include "agents.h"
+#include "agent.h"
 
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,

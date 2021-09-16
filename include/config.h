@@ -2,8 +2,8 @@
 #include "fpmas/api/scheduler/scheduler.h"
 #include "fpmas/api/model/spatial/grid.h"
 
-enum CellDistribution {
-	UNIFORM, CLUSTERED
+enum Utility {
+	UNIFORM, LINEAR, INVERSE, STEP
 };
 
 enum LbAlgorithm {
@@ -26,7 +26,7 @@ class BenchmarkConfig {
 		std::size_t grid_height;
 		float occupation_rate;
 		fpmas::api::scheduler::TimeStep num_steps;
-		CellDistribution cell_distribution;
+		Utility utility;
 		std::vector<Attractor> attractors;
 		std::map<LbAlgorithm, std::vector<fpmas::api::scheduler::TimeStep>> test_cases;
 
@@ -35,9 +35,9 @@ class BenchmarkConfig {
 
 namespace YAML {
 	template<>
-		struct convert<CellDistribution> {
-			static Node encode(const CellDistribution& rhs);
-			static bool decode(const Node& node, CellDistribution& rhs);
+		struct convert<Utility> {
+			static Node encode(const Utility& rhs);
+			static bool decode(const Node& node, Utility& rhs);
 		};
 
 	template<>

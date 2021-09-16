@@ -6,7 +6,7 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 	grid_height = config["grid_height"].as<std::size_t>();
 	occupation_rate = config["occupation_rate"].as<float>();
 	num_steps = config["num_steps"].as<fpmas::api::scheduler::TimeStep>();
-	cell_distribution = config["cell_distribution"].as<CellDistribution>();
+	utility = config["cell_distribution"].as<Utility>();
 	attractors = config["attractors"].as<std::vector<Attractor>>();
 	auto test_cases_vec = config["test_cases"].as<std::vector<TestCaseConfig>>();
 	for(auto item : test_cases_vec)
@@ -14,25 +14,37 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 }
 
 namespace YAML {
-	Node convert<CellDistribution>::encode(const CellDistribution& cell_distribution) {
-		switch(cell_distribution) {
+	Node convert<Utility>::encode(const Utility& utility) {
+		switch(utility) {
 			case UNIFORM:
 				return Node("UNIFORM");
-			case CLUSTERED:
-				return Node("CLUSTERED");
+			case LINEAR:
+				return Node("LINEAR");
+			case INVERSE:
+				return Node("INVERSE");
+			case STEP:
+				return Node("STEP");
 			default:
 				return Node();
 		}
 	}
 
-	bool convert<CellDistribution>::decode(const Node &node, CellDistribution& cell_distribution) {
+	bool convert<Utility>::decode(const Node &node, Utility& utility) {
 		std::string str = node.as<std::string>();
 		if(str == "UNIFORM") {
-			cell_distribution = UNIFORM;
+			utility = UNIFORM;
 			return true;
 		}
-		if(str == "CLUSTERED") {
-			cell_distribution = CLUSTERED;
+		if(str == "LINEAR") {
+			utility = LINEAR;
+			return true;
+		}
+		if(str == "INVERSE") {
+			utility = INVERSE;
+			return true;
+		}
+		if(str == "STEP") {
+			utility = STEP;
 			return true;
 		}
 		return false;

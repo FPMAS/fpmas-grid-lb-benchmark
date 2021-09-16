@@ -38,17 +38,24 @@ TestCase::TestCase(
 		auto& cell_group = model.buildGroup(0, cell_behavior);
 		auto& agent_group = model.buildMoveGroup(1, move_behavior);
 
-		std::unique_ptr<fpmas::api::model::GridCellFactory<BenchmarkCell>> cell_factory;
-		switch(config.cell_distribution) {
+		std::unique_ptr<UtilityFunction> utility_function;
+		switch(config.utility) {
 			case UNIFORM:
-				cell_factory.reset(new UniformBenchmarkCellFactory);
+				utility_function.reset(new UniformUtility);
 				break;
-			case CLUSTERED:
-				cell_factory.reset(new ClusteredBenchmarkCellFactory(config.attractors));
+			case LINEAR:
+				utility_function.reset(new LinearUtility);
+				break;
+			case INVERSE:
+				utility_function.reset(new InverseUtility);
+				break;
+			case STEP:
+				utility_function.reset(new StepUtility);
 				break;
 		}
+		BenchmarkCellFactory cell_factory(*utility_function, config.attractors);
 		fpmas::model::MooreGrid<BenchmarkCell>::Builder grid(
-				*cell_factory, config.grid_width, config.grid_height);
+				cell_factory, config.grid_width, config.grid_height);
 
 		auto local_cells = grid.build(model, {cell_group});
 		dump_grid(config.grid_width, config.grid_height, local_cells);
