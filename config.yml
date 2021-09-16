@@ -9,7 +9,7 @@ occupation_rate: 0.5
 num_steps: 100
 
 # Cell utility distribution policy: UNIFORM, LINEAR, INVERSE or STEP
-cell_distribution: CLUSTERED
+utility: LINEAR
 
 # If CLUSTERED, defines a list of attractors.
 # An attractor is defined as [[x, y], radius]

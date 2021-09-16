@@ -6,7 +6,7 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 	grid_height = config["grid_height"].as<std::size_t>();
 	occupation_rate = config["occupation_rate"].as<float>();
 	num_steps = config["num_steps"].as<fpmas::api::scheduler::TimeStep>();
-	utility = config["cell_distribution"].as<Utility>();
+	utility = config["utility"].as<Utility>();
 	attractors = config["attractors"].as<std::vector<Attractor>>();
 	auto test_cases_vec = config["test_cases"].as<std::vector<TestCaseConfig>>();
 	for(auto item : test_cases_vec)
