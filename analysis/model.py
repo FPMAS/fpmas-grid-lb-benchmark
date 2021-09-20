@@ -1,8 +1,10 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import sys
 import json
 import argparse
 import pathlib
+import random as rd
 
 def plot_grid(grid):
     plt.title("Utility")
@@ -18,11 +20,41 @@ def plot_cells(cells):
 
     cid = plt.figure(1).canvas.mpl_connect('resize_event', on_resize)
 
-def plot_agents(agent_files):
+def build_graph_lines(agents, sample_size):
+    lines = []
+    agent_loc_index = {}
+    for agent in agents:
+        agent_loc_index[str(agent["id"])] = agent["location"]
+    print(sample_size)
+    indexes = rd.sample(range(len(agents)), sample_size)
+    for index in indexes:
+        agent = agents[index]
+        for contact_id in agent["contacts"]:
+            contact_location = agent_loc_index[str(contact_id)]
+            lines.append(matplotlib.lines.Line2D(
+                [agent["location"][0]+.5, contact_location[0]+.5],
+                [agent["location"][1]+.5, contact_location[1]+.5]
+                ))
+    return lines
+
+def plot_agents(agent_files, draw_graph, sample_size):
     agent_counts = []
-    for agent_file in config.agent_files:
+    agent_graphs = []
+    for agent_file in agent_files:
         with open(agent_file) as json_file:
-            agent_counts.append(json.load(json_file))
+            agents_output = json.load(json_file)
+            agent_grid = [
+                    [0 for _ in range(0, agents_output["grid"]["height"])]
+                    for _ in range(0, agents_output["grid"]["width"])
+                    ]
+            agent_counts.append(agent_grid)
+            for agent in agents_output["agents"]:
+                agent_grid[agent["location"][1]][agent["location"][0]]+=1
+            if draw_graph:
+                agent_graphs.append(
+                        build_graph_lines(agents_output["agents"], sample_size)
+                        )
+
     n = 0
     m = 0
     if config.n is None and config.m is None:
@@ -49,6 +81,9 @@ def plot_agents(agent_files):
             if(i >= len(agent_counts)):
                 break
             axes[x][y].pcolormesh(agent_counts[i], cmap="Reds", vmin=0, vmax=vmax)
+            if draw_graph:
+                for line in agent_graphs[i]:
+                    axes[x][y].add_line(line)
             i+=1
 
     def on_resize(event):
@@ -72,6 +107,12 @@ def build_arg_parser():
             help="Local agent counts for each process"
             )
     parser.add_argument(
+            '-s', '--graph-sample', type=int, nargs='?', const=20, default=None,
+            help="Sample size to draw graph lines. "
+            "If not specified, no graph is drawn. "
+            "If specified without arguments, a default value of 20 is used."
+            )
+    parser.add_argument(
             '-n', type=int,
             help="Number of columns to display agent counts"
             )
@@ -83,6 +124,7 @@ def build_arg_parser():
 
 if __name__ == "__main__":
     config = build_arg_parser().parse_args();
+    print(config)
     if config.grid_file is not None:
         with open(config.grid_file) as json_file:
             grid = json.load(json_file)
@@ -93,6 +135,10 @@ if __name__ == "__main__":
             cells = json.load(json_file)
             plot_cells(cells)
     if config.agent_files is not None:
-        plot_agents(config.agent_files)
+        plot_agents(
+                config.agent_files,
+                True if config.graph_sample is not None else False,
+                config.graph_sample
+                )
 
     plt.show()

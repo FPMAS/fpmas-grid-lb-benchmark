@@ -21,7 +21,7 @@ class LoadBalancingProbeTask : public fpmas::api::scheduler::Task {
 
 };
 
-class LoadBalancingProbe : public fpmas::api::graph::LoadBalancing<fpmas::model::AgentPtr> {
+class LoadBalancingProbe : public fpmas::api::model::LoadBalancing {
 	private:
 		fpmas::api::graph::LoadBalancing<fpmas::model::AgentPtr>& lb;
 
@@ -54,11 +54,22 @@ class LoadBalancingProbe : public fpmas::api::graph::LoadBalancing<fpmas::model:
 
 class TestCase {
 	private:
-		fpmas::model::IdleBehavior cell_behavior;
-		fpmas::model::Behavior<BenchmarkAgent> move_behavior {&BenchmarkAgent::move};
+		IdleBehavior cell_behavior;
+		Behavior<BenchmarkAgent> create_relations_from_neighborhood {
+			&BenchmarkAgent::create_relations_from_neighborhood
+		};
+		Behavior<BenchmarkAgent> create_relations_from_contacts {
+			&BenchmarkAgent::create_relations_from_contacts
+		};
+		Behavior<BenchmarkAgent> handle_new_contacts {
+			&BenchmarkAgent::handle_new_contacts
+		};
+		Behavior<BenchmarkAgent> move_behavior {
+			&BenchmarkAgent::move
+		};
 
 	public:
-		fpmas::model::GridModel<fpmas::synchro::GhostMode, BenchmarkCell> model;
+		GridModel<fpmas::synchro::GhostMode, BenchmarkCell> model;
 		std::string lb_algorithm_name;
 		LoadBalancingProbe lb_probe;
 

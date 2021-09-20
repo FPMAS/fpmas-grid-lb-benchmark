@@ -55,7 +55,59 @@ class CellsOutput : public fpmas::io::OutputBase {
 		void dump() override;
 };
 
-class AgentsOutput : public fpmas::io::JsonOutput<std::vector<std::vector<std::size_t>>> {
+struct BenchmarkAgentView {
+	DistributedId id;
+	std::deque<DistributedId> contacts;
+	std::vector<DistributedId> perceptions;
+	DiscretePoint location;
+
+	BenchmarkAgentView(const BenchmarkAgent* agent);
+};
+
+struct AgentsOutputView {
+	std::size_t grid_width;
+	std::size_t grid_height;
+	std::vector<BenchmarkAgentView> agents;
+
+	AgentsOutputView(
+			std::size_t grid_width, std::size_t grid_height,
+			std::vector<BenchmarkAgentView> agents
+			);
+};
+
+namespace nlohmann {
+	template<>
+		struct adl_serializer<BenchmarkAgentView> {
+			static void to_json(nlohmann::json& json, const BenchmarkAgentView& agent);
+		};
+
+	template<>
+		struct adl_serializer<AgentsOutputView> {
+			static void to_json(nlohmann::json& json, const AgentsOutputView& agent_output);
+		};
+}
+
+/**
+ * Json serialization scheme:
+ * ```
+ * # Agents list
+ * {
+ *     "grid": {
+ *         "width": grid_width,
+ *         "height": grid_height
+ *     },
+ *     "agents": [
+ *         {
+ *             "id": agent_id,
+ *             "contacts": [ids, ...],
+ *             "perceptions": [ids, ...],
+ *             "location": [x, y]
+ *         },
+ *         ...
+ *     ]
+ * }
+ */
+class AgentsOutput : public fpmas::io::JsonOutput<AgentsOutputView> {
 	private:
 		fpmas::io::DynamicFileOutput output_file;
 		fpmas::api::model::Model& model;
@@ -70,15 +122,5 @@ class AgentsOutput : public fpmas::io::JsonOutput<std::vector<std::vector<std::s
 				fpmas::api::model::Model& model,
 				std::string lb_algorithm,
 				std::size_t grid_width, std::size_t grid_height
-				) :
-			fpmas::io::JsonOutput<std::vector<std::vector<std::size_t>>>(
-					output_file, [this] () {return gather_agents();}
-					),
-			output_file(
-					lb_algorithm + "_agents.%r.%t.json",
-					model.getMpiCommunicator(), model.runtime()
-					),
-			model(model), grid_width(grid_width), grid_height(grid_height) {
-			}
+				);
 };
-

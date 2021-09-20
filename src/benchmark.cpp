@@ -36,7 +36,18 @@ TestCase::TestCase(
 	agents_output(model, this->lb_algorithm_name, config.grid_width, config.grid_height),
 	config(config) {
 		auto& cell_group = model.buildGroup(CELL_GROUP, cell_behavior);
-		auto& agent_group = model.buildMoveGroup(AGENT_GROUP, move_behavior);
+		auto& create_relations_neighbors_group = model.buildGroup(
+				RELATIONS_FROM_NEIGHBORS_GROUP, create_relations_from_neighborhood
+				);
+		auto& create_relations_contacts_group = model.buildGroup(
+				RELATIONS_FROM_CONTACTS_GROUP, create_relations_from_contacts
+				);
+		auto& handle_new_contacts_group = model.buildGroup(
+				HANDLE_NEW_CONTACTS_GROUP, handle_new_contacts
+				);
+		auto& move_group = model.buildMoveGroup(
+				MOVE_GROUP, move_behavior
+				);
 
 		std::unique_ptr<UtilityFunction> utility_function;
 		switch(config.utility) {
@@ -54,7 +65,7 @@ TestCase::TestCase(
 				break;
 		}
 		BenchmarkCellFactory cell_factory(*utility_function, config.attractors);
-		fpmas::model::MooreGrid<BenchmarkCell>::Builder grid(
+		MooreGrid<BenchmarkCell>::Builder grid(
 				cell_factory, config.grid_width, config.grid_height);
 
 		auto local_cells = grid.build(model, {cell_group});
@@ -67,13 +78,24 @@ TestCase::TestCase(
 		fpmas::model::GridAgentBuilder<BenchmarkCell> agent_builder;
 		fpmas::model::DefaultSpatialAgentFactory<BenchmarkAgent> agent_factory;
 
-		agent_builder.build(model, {agent_group}, agent_factory, mapping);
+		agent_builder.build(
+				model,
+				{
+				create_relations_neighbors_group, create_relations_contacts_group,
+				handle_new_contacts_group, move_group
+				},
+				agent_factory, mapping);
 
 		model.graph().synchronize();
 
 		scheduler.schedule(0, lb_period, lb_probe.job);
 		scheduler.schedule(0.1, 1, cell_group.jobs());
-		scheduler.schedule(0.2, 1, agent_group.jobs());
+		if(config.agent_interactions == SMALL_WORLD) {
+			scheduler.schedule(0.20, 10, create_relations_neighbors_group.jobs());
+			scheduler.schedule(0.21, 1, create_relations_contacts_group.jobs());
+			scheduler.schedule(0.22, 1, handle_new_contacts_group.jobs());
+		}
+		scheduler.schedule(0.23, 1, move_group.jobs());
 		scheduler.schedule(0.3, 1, csv_output.job());
 		fpmas::scheduler::TimeStep last_lb_date
 			= ((config.num_steps-1) / lb_period) * lb_period;

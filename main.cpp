@@ -3,14 +3,14 @@
 #include "fpmas/model/spatial/cell_load_balancing.h"
 
 FPMAS_JSON_SET_UP(
-		fpmas::model::GridCell::JsonBase,
+		GridCell::JsonBase,
 		BenchmarkAgent::JsonBase,
 		BenchmarkCell::JsonBase
 		);
 
 int main(int argc, char** argv) {
 	FPMAS_REGISTER_AGENT_TYPES(
-			fpmas::model::GridCell::JsonBase,
+			GridCell::JsonBase,
 			BenchmarkAgent::JsonBase,
 			BenchmarkCell::JsonBase
 			);
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 	{
 		BenchmarkConfig config(argv[1]);
 
-		fpmas::model::ZoltanLoadBalancing zoltan_lb(fpmas::communication::WORLD);
+		ZoltanLoadBalancing zoltan_lb(fpmas::communication::WORLD);
 		for(auto lb_period : config.test_cases[ZOLTAN_LB]) {
 			fpmas::scheduler::Scheduler scheduler;
 			fpmas::runtime::Runtime runtime(scheduler);
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 		for(auto lb_period : config.test_cases[SCHEDULED_LB]) {
 			fpmas::scheduler::Scheduler scheduler;
 			fpmas::runtime::Runtime runtime(scheduler);
-			fpmas::model::ScheduledLoadBalancing scheduled_load_balancing(
+			ScheduledLoadBalancing scheduled_load_balancing(
 					zoltan_lb, scheduler, runtime
 					);
 			TestCase scheduled_lb_test(
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 		for(auto lb_period : config.test_cases[GRID_LB]) {
 			fpmas::scheduler::Scheduler scheduler;
 			fpmas::runtime::Runtime runtime(scheduler);
-			fpmas::model::GridLoadBalancing grid_lb(
+			GridLoadBalancing grid_lb(
 					config.grid_width, config.grid_height, fpmas::communication::WORLD
 					);
 			TestCase grid_lb_test(
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 		for(auto lb_period : config.test_cases[ZOLTAN_CELL_LB]) {
 			fpmas::scheduler::Scheduler scheduler;
 			fpmas::runtime::Runtime runtime(scheduler);
-			fpmas::model::CellLoadBalancing zoltan_cell_lb(
+			CellLoadBalancing zoltan_cell_lb(
 					fpmas::communication::WORLD, zoltan_lb
 					);
 			TestCase zoltan_cell_lb_test(
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 		for(auto lb_period : config.test_cases[RANDOM_LB]) {
 			fpmas::scheduler::Scheduler scheduler;
 			fpmas::runtime::Runtime runtime(scheduler);
-			fpmas::model::RandomLoadBalancing random_lb(fpmas::communication::WORLD);
+			RandomLoadBalancing random_lb(fpmas::communication::WORLD);
 			TestCase random_lb_test(
 					"random_lb", config,
 					scheduler, runtime, random_lb, lb_period

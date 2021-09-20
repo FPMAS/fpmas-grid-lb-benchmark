@@ -8,6 +8,7 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 	num_steps = config["num_steps"].as<fpmas::api::scheduler::TimeStep>();
 	utility = config["utility"].as<Utility>();
 	attractors = config["attractors"].as<std::vector<Attractor>>();
+	agent_interactions = config["agent_interactions"].as<AgentInteractions>();
 	auto test_cases_vec = config["test_cases"].as<std::vector<TestCaseConfig>>();
 	for(auto item : test_cases_vec)
 		test_cases[item.algorithm] = item.lb_periods;
@@ -87,6 +88,33 @@ namespace YAML {
 		}
 		if(str == "RANDOM_LB") {
 			lb_algorithm = RANDOM_LB;
+			return true;
+		}
+		return false;
+	}
+
+	Node convert<AgentInteractions>::encode(
+			const AgentInteractions& agent_interactions) {
+		switch(agent_interactions) {
+			case LOCAL:
+				return Node("LOCAL");
+			case SMALL_WORLD:
+				return Node("SMALL_WORLD");
+			default:
+				return Node();
+		}
+	}
+
+	bool convert<AgentInteractions>::decode(
+			const Node &node,
+			AgentInteractions &agent_interactions) {
+		std::string str = node.as<std::string>();
+		if(str == "LOCAL") {
+			agent_interactions = LOCAL;
+			return true;
+		}
+		if(str == "SMALL_WORLD") {
+			agent_interactions = SMALL_WORLD;
 			return true;
 		}
 		return false;

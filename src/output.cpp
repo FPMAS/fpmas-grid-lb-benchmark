@@ -1,5 +1,19 @@
 #include "benchmark.h"
 
+BenchmarkAgentView::BenchmarkAgentView(const BenchmarkAgent* agent) :
+	id(agent->node()->getId()),
+	contacts(agent->contacts()),
+	location(agent->locationPoint()) {
+		for(auto perception : agent->node()->getOutgoingEdges(fpmas::api::model::PERCEPTION))
+			perceptions.push_back(perception->getTargetNode()->getId());
+	}
+
+AgentsOutputView::AgentsOutputView(
+		std::size_t grid_width, std::size_t grid_height,
+		std::vector<BenchmarkAgentView> agents
+		) : grid_width(grid_width), grid_height(grid_height), agents(agents) {
+}
+
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,
 		std::vector<BenchmarkCell*> local_cells) {
@@ -26,6 +40,30 @@ void dump_grid(
 			.dump();
 	}
 }
+
+AgentsOutput::AgentsOutput(
+		fpmas::api::model::Model& model,
+		std::string lb_algorithm,
+		std::size_t grid_width, std::size_t grid_height
+		) :
+	fpmas::io::JsonOutput<AgentsOutputView>(
+			output_file, [this, grid_width, grid_height] () {
+
+			std::vector<BenchmarkAgentView> local_agents;
+			for(auto local_agent : this->model.getGroup(AGENT_GROUP).localAgents())
+				local_agents.emplace_back(
+						dynamic_cast<const BenchmarkAgent*>(local_agent)
+						);
+			return AgentsOutputView(grid_width, grid_height, local_agents);
+			}
+			),
+	output_file(
+			lb_algorithm + "_agents.%r.%t.json",
+			model.getMpiCommunicator(), model.runtime()
+			),
+	model(model), grid_width(grid_width), grid_height(grid_height) {
+	}
+
 
 LoadBalancingCsvOutput::LoadBalancingCsvOutput(TestCase& test_case)
 	:
@@ -125,4 +163,21 @@ std::vector<std::vector<std::size_t>> AgentsOutput::gather_agents() {
 		grid[grid_agent->locationPoint().y][grid_agent->locationPoint().x]++;
 	}
 	return grid;
+}
+
+namespace nlohmann {
+	void adl_serializer<BenchmarkAgentView>::to_json(
+			nlohmann::json& j, const BenchmarkAgentView &agent) {
+		j["id"] = agent.id;
+		j["contacts"] = agent.contacts;
+		j["perceptions"] = agent.perceptions;
+		j["location"] = agent.location;
+	}
+
+	void adl_serializer<AgentsOutputView>::to_json(
+			nlohmann::json& j, const AgentsOutputView& agent_view) {
+		j["grid"]["width"] = agent_view.grid_width;
+		j["grid"]["height"] = agent_view.grid_height;
+		j["agents"] = agent_view.agents;
+	}
 }

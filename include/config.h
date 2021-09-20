@@ -3,7 +3,15 @@
 #include "fpmas/api/model/spatial/grid.h"
 #include "fpmas/utils/macros.h"
 
-FPMAS_DEFINE_GROUPS(AGENT_GROUP, CELL_GROUP);
+FPMAS_DEFINE_GROUPS(
+		RELATIONS_FROM_NEIGHBORS_GROUP,
+		RELATIONS_FROM_CONTACTS_GROUP,
+		HANDLE_NEW_CONTACTS_GROUP,
+		MOVE_GROUP,
+		CELL_GROUP);
+#define AGENT_GROUP MOVE_GROUP
+
+FPMAS_DEFINE_LAYERS(CONTACT, NEW_CONTACT);
 
 enum Utility {
 	UNIFORM, LINEAR, INVERSE, STEP
@@ -11,6 +19,10 @@ enum Utility {
 
 enum LbAlgorithm {
 	SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, RANDOM_LB
+};
+
+enum AgentInteractions {
+	LOCAL, SMALL_WORLD
 };
 
 struct Attractor {
@@ -31,6 +43,7 @@ class BenchmarkConfig {
 		fpmas::api::scheduler::TimeStep num_steps;
 		Utility utility;
 		std::vector<Attractor> attractors;
+		AgentInteractions agent_interactions;
 		std::map<LbAlgorithm, std::vector<fpmas::api::scheduler::TimeStep>> test_cases;
 
 		BenchmarkConfig(std::string config_file);
@@ -47,6 +60,12 @@ namespace YAML {
 		struct convert<LbAlgorithm> {
 			static Node encode(const LbAlgorithm& rhs);
 			static bool decode(const Node& node, LbAlgorithm& rhs);
+		};
+
+	template<>
+		struct convert<AgentInteractions> {
+			static Node encode(const AgentInteractions& rhs);
+			static bool decode(const Node& node, AgentInteractions& rhs);
 		};
 
 	template<>
