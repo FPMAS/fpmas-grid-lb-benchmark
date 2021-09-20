@@ -2,6 +2,7 @@
 
 BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 	YAML::Node config = YAML::LoadFile(config_file);
+
 	grid_width = config["grid_width"].as<std::size_t>();
 	grid_height = config["grid_height"].as<std::size_t>();
 	occupation_rate = config["occupation_rate"].as<float>();
@@ -9,9 +10,7 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 	utility = config["utility"].as<Utility>();
 	attractors = config["attractors"].as<std::vector<Attractor>>();
 	agent_interactions = config["agent_interactions"].as<AgentInteractions>();
-	auto test_cases_vec = config["test_cases"].as<std::vector<TestCaseConfig>>();
-	for(auto item : test_cases_vec)
-		test_cases[item.algorithm] = item.lb_periods;
+	test_cases = config["test_cases"].as<std::vector<TestCaseConfig>>();
 }
 
 namespace YAML {

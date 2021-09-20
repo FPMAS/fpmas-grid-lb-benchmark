@@ -44,7 +44,7 @@ class BenchmarkConfig {
 		Utility utility;
 		std::vector<Attractor> attractors;
 		AgentInteractions agent_interactions;
-		std::map<LbAlgorithm, std::vector<fpmas::api::scheduler::TimeStep>> test_cases;
+		std::vector<TestCaseConfig> test_cases;
 
 		BenchmarkConfig(std::string config_file);
 };
