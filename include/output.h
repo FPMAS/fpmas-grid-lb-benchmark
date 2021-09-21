@@ -64,14 +64,24 @@ struct BenchmarkAgentView {
 	BenchmarkAgentView(const BenchmarkAgent* agent);
 };
 
+struct DistantBenchmarkAgentView {
+	DistributedId id;
+	int rank;
+
+	DistantBenchmarkAgentView(const BenchmarkAgent* agent);
+};
+
 struct AgentsOutputView {
+	int rank;
 	std::size_t grid_width;
 	std::size_t grid_height;
 	std::vector<BenchmarkAgentView> agents;
+	std::vector<DistantBenchmarkAgentView> distant_agents;
 
 	AgentsOutputView(
-			std::size_t grid_width, std::size_t grid_height,
-			std::vector<BenchmarkAgentView> agents
+			int rank, std::size_t grid_width, std::size_t grid_height,
+			std::vector<BenchmarkAgentView> agents,
+			std::vector<DistantBenchmarkAgentView> distant_agents
 			);
 };
 
@@ -79,6 +89,11 @@ namespace nlohmann {
 	template<>
 		struct adl_serializer<BenchmarkAgentView> {
 			static void to_json(nlohmann::json& json, const BenchmarkAgentView& agent);
+		};
+
+	template<>
+		struct adl_serializer<DistantBenchmarkAgentView> {
+			static void to_json(nlohmann::json& json, const DistantBenchmarkAgentView& agent);
 		};
 
 	template<>
@@ -92,6 +107,7 @@ namespace nlohmann {
  * ```
  * # Agents list
  * {
+ *     "rank": rank,
  *     "grid": {
  *         "width": grid_width,
  *         "height": grid_height
@@ -102,6 +118,13 @@ namespace nlohmann {
  *             "contacts": [ids, ...],
  *             "perceptions": [ids, ...],
  *             "location": [x, y]
+ *         },
+ *         ...
+ *     ],
+ *     "distant_agents": [
+ *         {
+ *             "id": agent_id,
+ *             "rank": rank
  *         },
  *         ...
  *     ]

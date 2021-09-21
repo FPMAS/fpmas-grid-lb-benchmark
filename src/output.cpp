@@ -8,10 +8,18 @@ BenchmarkAgentView::BenchmarkAgentView(const BenchmarkAgent* agent) :
 			perceptions.push_back(perception->getTargetNode()->getId());
 	}
 
+DistantBenchmarkAgentView::DistantBenchmarkAgentView(const BenchmarkAgent* agent) :
+	id(agent->node()->getId()),
+	rank(agent->node()->location()) {
+	}
+
 AgentsOutputView::AgentsOutputView(
-		std::size_t grid_width, std::size_t grid_height,
-		std::vector<BenchmarkAgentView> agents
-		) : grid_width(grid_width), grid_height(grid_height), agents(agents) {
+		int rank, std::size_t grid_width, std::size_t grid_height,
+		std::vector<BenchmarkAgentView> agents,
+		std::vector<DistantBenchmarkAgentView> distant_agents
+		) :
+	rank(rank), grid_width(grid_width), grid_height(grid_height),
+	agents(agents), distant_agents(distant_agents) {
 }
 
 void dump_grid(
@@ -47,14 +55,27 @@ AgentsOutput::AgentsOutput(
 		std::size_t grid_width, std::size_t grid_height
 		) :
 	fpmas::io::JsonOutput<AgentsOutputView>(
-			output_file, [this, grid_width, grid_height] () {
+			output_file, [this, &model, grid_width, grid_height] () {
 
 			std::vector<BenchmarkAgentView> local_agents;
-			for(auto local_agent : this->model.getGroup(AGENT_GROUP).localAgents())
-				local_agents.emplace_back(
-						dynamic_cast<const BenchmarkAgent*>(local_agent)
-						);
-			return AgentsOutputView(grid_width, grid_height, local_agents);
+			std::vector<DistantBenchmarkAgentView> distant_agents;
+			for(auto agent : this->model.getGroup(AGENT_GROUP).agents())
+				switch(agent->node()->state()) {
+					case fpmas::api::graph::LOCAL:
+						local_agents.emplace_back(
+								dynamic_cast<const BenchmarkAgent*>(agent)
+								);
+					break;
+					case fpmas::api::graph::DISTANT:
+						distant_agents.emplace_back(
+								dynamic_cast<const BenchmarkAgent*>(agent)
+								);
+					break;
+				}
+			return AgentsOutputView(
+					model.getMpiCommunicator().getRank(),
+					grid_width, grid_height, local_agents, distant_agents
+					);
 			}
 			),
 	output_file(
@@ -174,10 +195,18 @@ namespace nlohmann {
 		j["location"] = agent.location;
 	}
 
+	void adl_serializer<DistantBenchmarkAgentView>::to_json(
+			nlohmann::json& j, const DistantBenchmarkAgentView &agent) {
+		j["id"] = agent.id;
+		j["rank"] = agent.rank;
+	}
+
 	void adl_serializer<AgentsOutputView>::to_json(
 			nlohmann::json& j, const AgentsOutputView& agent_view) {
+		j["rank"] = agent_view.rank;
 		j["grid"]["width"] = agent_view.grid_width;
 		j["grid"]["height"] = agent_view.grid_height;
 		j["agents"] = agent_view.agents;
+		j["distant_agents"] = agent_view.distant_agents;
 	}
 }
