@@ -106,19 +106,19 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(TestCase& test_case)
 			}},
 			{"AGENTS", [&test_case] {
 			float total_weight = 0;
-			for(auto agent : test_case.model.getGroup(1).localAgents())
+			for(auto agent : test_case.model.getGroup(AGENT_GROUP).localAgents())
 				total_weight += agent->node()->getWeight();
 			return total_weight;
 			}},
 			{"CELLS", [&test_case] {
 			float total_weight = 0;
-			for(auto agent : test_case.model.getGroup(0).localAgents())
+			for(auto agent : test_case.model.getGroup(CELL_GROUP).localAgents())
 				total_weight += agent->node()->getWeight();
 			return total_weight;
 			}},
 			{"DISTANT_AGENT_EDGES", [&test_case] {
 			float total_weight = 0;
-			for(auto agent : test_case.model.getGroup(1).localAgents())
+			for(auto agent : test_case.model.getGroup(AGENT_GROUP).localAgents())
 				for(auto edge : agent->node()->getOutgoingEdges())
 					if(edge->state() == fpmas::api::graph::DISTANT)
 						total_weight+=edge->getWeight();
@@ -126,7 +126,7 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(TestCase& test_case)
 			}},
 			{"DISTANT_CELL_EDGES", [&test_case] {
 			float total_weight = 0;
-			for(auto cell : test_case.model.getGroup(0).localAgents())
+			for(auto cell : test_case.model.getGroup(CELL_GROUP).localAgents())
 				for(auto edge : cell->node()->getOutgoingEdges())
 					if(edge->state() == fpmas::api::graph::DISTANT)
 						total_weight+=edge->getWeight();
