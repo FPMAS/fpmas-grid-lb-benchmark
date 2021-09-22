@@ -85,22 +85,6 @@ struct AgentsOutputView {
 			);
 };
 
-namespace nlohmann {
-	template<>
-		struct adl_serializer<BenchmarkAgentView> {
-			static void to_json(nlohmann::json& json, const BenchmarkAgentView& agent);
-		};
-
-	template<>
-		struct adl_serializer<DistantBenchmarkAgentView> {
-			static void to_json(nlohmann::json& json, const DistantBenchmarkAgentView& agent);
-		};
-
-	template<>
-		struct adl_serializer<AgentsOutputView> {
-			static void to_json(nlohmann::json& json, const AgentsOutputView& agent_output);
-		};
-}
 
 /**
  * Json serialization scheme:
@@ -136,10 +120,7 @@ class AgentsOutput : public fpmas::io::JsonOutput<AgentsOutputView> {
 		fpmas::api::model::Model& model;
 		std::size_t grid_width;
 		std::size_t grid_height;
-		/*
-		 * Returns a matrix containing the count of agents in each cell
-		 */
-		std::vector<std::vector<std::size_t>> gather_agents();
+
 	public:
 		AgentsOutput(
 				fpmas::api::model::Model& model,
@@ -147,3 +128,20 @@ class AgentsOutput : public fpmas::io::JsonOutput<AgentsOutputView> {
 				std::size_t grid_width, std::size_t grid_height
 				);
 };
+
+namespace nlohmann {
+	template<>
+		struct adl_serializer<BenchmarkAgentView> {
+			static void to_json(nlohmann::json& json, const BenchmarkAgentView& agent);
+		};
+
+	template<>
+		struct adl_serializer<DistantBenchmarkAgentView> {
+			static void to_json(nlohmann::json& json, const DistantBenchmarkAgentView& agent);
+		};
+
+	template<>
+		struct adl_serializer<AgentsOutputView> {
+			static void to_json(nlohmann::json& json, const AgentsOutputView& agent_output);
+		};
+}

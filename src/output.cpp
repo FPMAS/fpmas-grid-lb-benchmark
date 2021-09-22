@@ -173,19 +173,6 @@ std::vector<std::vector<int>> CellsOutput::gather_cells() {
 	return grid;
 }
 
-std::vector<std::vector<std::size_t>> AgentsOutput::gather_agents() {
-	std::vector<std::vector<std::size_t>> grid;
-	grid.resize(grid_height);
-	for(auto& row : grid)
-		row.resize(grid_width, 0);
-
-	for(auto agent : model.getGroup(AGENT_GROUP).localAgents()) {
-		auto grid_agent = dynamic_cast<BenchmarkAgent*>(agent);
-		grid[grid_agent->locationPoint().y][grid_agent->locationPoint().x]++;
-	}
-	return grid;
-}
-
 namespace nlohmann {
 	void adl_serializer<BenchmarkAgentView>::to_json(
 			nlohmann::json& j, const BenchmarkAgentView &agent) {
