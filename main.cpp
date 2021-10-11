@@ -14,10 +14,17 @@ int main(int argc, char** argv) {
 			BenchmarkAgent::JsonBase,
 			BenchmarkCell::JsonBase
 			);
+	if(argc <= 1) {
+		std::cerr << "[FATAL ERROR] Missing config file argument" << std::endl;
+		return EXIT_FAILURE;
+	}
+
 
 	fpmas::init(argc, argv);
 	{
 		BenchmarkConfig config(argv[1]);
+		if(!config.is_valid)
+			return EXIT_FAILURE;
 
 		for(auto test_case : config.test_cases) {
 			fpmas::scheduler::Scheduler scheduler;

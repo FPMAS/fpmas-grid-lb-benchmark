@@ -37,6 +37,8 @@ struct TestCaseConfig {
 
 class BenchmarkConfig {
 	public:
+		bool is_valid = true;
+
 		std::size_t grid_width;
 		std::size_t grid_height;
 		float occupation_rate;

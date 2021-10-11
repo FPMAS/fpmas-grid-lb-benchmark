@@ -1,16 +1,37 @@
 #include "config.h"
 
-BenchmarkConfig::BenchmarkConfig(std::string config_file) {
-	YAML::Node config = YAML::LoadFile(config_file);
+#define LOAD_YAML_CONFIG(FIELD_NAME, TYPENAME)\
+	{\
+	YAML::Node node = config[#FIELD_NAME];\
+	if(!node.IsDefined()) {\
+		std::cerr << "[FATAL ERROR] Missing configuration field: " #FIELD_NAME " (" #TYPENAME ")" << std::endl;\
+		this->is_valid = false;\
+	} else {\
+		try{\
+			this->FIELD_NAME = node.as<TYPENAME>();\
+		} catch (const YAML::TypedBadConversion<TYPENAME>& e) {\
+			this->is_valid = false;\
+			std::cerr << "[FATAL ERROR] Bad " #FIELD_NAME " field parsing. Expected type: " #TYPENAME << std::endl;\
+		}\
+	}\
+	}
 
-	grid_width = config["grid_width"].as<std::size_t>();
-	grid_height = config["grid_height"].as<std::size_t>();
-	occupation_rate = config["occupation_rate"].as<float>();
-	num_steps = config["num_steps"].as<fpmas::api::scheduler::TimeStep>();
-	utility = config["utility"].as<Utility>();
-	attractors = config["attractors"].as<std::vector<Attractor>>();
-	agent_interactions = config["agent_interactions"].as<AgentInteractions>();
-	test_cases = config["test_cases"].as<std::vector<TestCaseConfig>>();
+BenchmarkConfig::BenchmarkConfig(std::string config_file) {
+	try {
+		YAML::Node config = YAML::LoadFile(config_file);
+
+		LOAD_YAML_CONFIG(grid_width, unsigned int);
+		LOAD_YAML_CONFIG(grid_height, unsigned int);
+		LOAD_YAML_CONFIG(occupation_rate, float);
+		LOAD_YAML_CONFIG(num_steps, fpmas::api::scheduler::TimeStep);
+		LOAD_YAML_CONFIG(utility, Utility);
+		LOAD_YAML_CONFIG(attractors, std::vector<Attractor>);
+		LOAD_YAML_CONFIG(agent_interactions, AgentInteractions);
+		LOAD_YAML_CONFIG(test_cases, std::vector<TestCaseConfig>);
+	} catch(const YAML::BadFile&) {
+		this->is_valid = false;
+		std::cerr << "[FATAL ERROR] Config file not found: " << config_file << std::endl;
+	}
 }
 
 namespace YAML {
