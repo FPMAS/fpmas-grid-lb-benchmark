@@ -18,15 +18,18 @@ float InverseUtility::utility(Attractor attractor, DiscretePoint point) const {
 	// Utility=beta when distance=radius
 	float beta = 0.5;
 	float alpha = (1 - beta) / (beta * attractor.radius);
-	return 1 / (1 + alpha * fpmas::api::model::euclidian_distance(
+	return 1 / (1 + alpha * (fpmas::api::model::euclidian_distance(
 				attractor.center, point
-				));
+				)-offset));
 }
+
 float StepUtility::utility(Attractor attractor, DiscretePoint point) const {
-	return fpmas::api::model::euclidian_distance(
+	if(fpmas::api::model::euclidian_distance(
 			attractor.center, point
-			) > attractor.radius
-		? 0.f : 1.f;
+			) > attractor.radius)
+		return InverseUtility(attractor.radius).utility(attractor, point);
+	else
+		return 1.f;
 }
 
 BenchmarkCell* BenchmarkCellFactory::build(fpmas::model::DiscretePoint location) {

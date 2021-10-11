@@ -47,8 +47,28 @@ struct LinearUtility : public UtilityFunction {
 	float utility(Attractor attractor, DiscretePoint point) const override;
 };
 
-struct InverseUtility : public UtilityFunction {
-	float utility(Attractor attractor, DiscretePoint point) const override;
+class InverseUtility : public UtilityFunction {
+	private:
+		float offset;
+
+	public:
+		/**
+		 * InverseUtility constructor.
+		 *
+		 * Equivalent to `InverseUtility(0.f)`.
+		 */
+		InverseUtility() : InverseUtility(0.f) {
+		}
+
+		/**
+		 * InverseUtility constructor.
+		 *
+		 * @param offset distance at which the utility value is 1.f
+		 */
+		InverseUtility(float offset) : offset() {
+		}
+
+		float utility(Attractor attractor, DiscretePoint point) const override;
 };
 
 struct StepUtility : public UtilityFunction {
