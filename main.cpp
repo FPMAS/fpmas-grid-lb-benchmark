@@ -26,10 +26,10 @@ int main(int argc, char** argv) {
 			return EXIT_FAILURE;
 
 		for(auto test_case : config.test_cases) {
-			fpmas::scheduler::Scheduler scheduler;
-			fpmas::runtime::Runtime runtime(scheduler);
-
 			for(auto lb_period : test_case.lb_periods) {
+				fpmas::scheduler::Scheduler scheduler;
+				fpmas::runtime::Runtime runtime(scheduler);
+
 				switch(test_case.algorithm) {
 					case ZOLTAN_LB:
 						{
