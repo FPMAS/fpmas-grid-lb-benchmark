@@ -53,6 +53,8 @@ class BenchmarkConfig {
 		AgentInteractions agent_interactions;
 		float cell_weight;
 		float agent_weight;
+		fpmas::api::scheduler::TimeStep refresh_local_contacts;
+		fpmas::api::scheduler::TimeStep refresh_distant_contacts;
 		std::vector<Attractor> attractors;
 		std::vector<TestCaseConfig> test_cases;
 

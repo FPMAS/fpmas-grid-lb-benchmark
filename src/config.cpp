@@ -18,6 +18,8 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 		LOAD_YAML_CONFIG_0(agent_interactions, AgentInteractions);
 		LOAD_YAML_CONFIG_0(cell_weight, float);
 		LOAD_YAML_CONFIG_0(agent_weight, float);
+		LOAD_YAML_CONFIG_0(refresh_local_contacts, fpmas::api::scheduler::TimeStep);
+		LOAD_YAML_CONFIG_0(refresh_distant_contacts, fpmas::api::scheduler::TimeStep);
 		LOAD_YAML_CONFIG_1(BenchmarkAgent, move_policy, MovePolicy);
 		LOAD_YAML_CONFIG_1(BenchmarkAgent, range_size, unsigned int);
 		LOAD_YAML_CONFIG_1(BenchmarkAgent, max_contacts, unsigned int);

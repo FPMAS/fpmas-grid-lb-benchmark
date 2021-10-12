@@ -97,9 +97,18 @@ TestCase::TestCase(
 		scheduler.schedule(0, lb_period, lb_probe.job);
 		scheduler.schedule(0.1, 1, cell_group.jobs());
 		if(config.agent_interactions == SMALL_WORLD) {
-			scheduler.schedule(0.20, 10, create_relations_neighbors_group.jobs());
-			scheduler.schedule(0.21, 1, create_relations_contacts_group.jobs());
-			scheduler.schedule(0.22, 1, handle_new_contacts_group.jobs());
+			scheduler.schedule(
+					0.20, config.refresh_local_contacts,
+					create_relations_neighbors_group.jobs()
+					);
+			scheduler.schedule(
+					0.21, config.refresh_distant_contacts,
+					create_relations_contacts_group.jobs()
+					);
+			scheduler.schedule(
+					0.22, config.refresh_distant_contacts,
+					handle_new_contacts_group.jobs()
+					);
 		}
 		scheduler.schedule(0.23, 1, move_group.jobs());
 		scheduler.schedule(0.3, 1, csv_output.job());

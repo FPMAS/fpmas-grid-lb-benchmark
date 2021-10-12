@@ -19,6 +19,11 @@ cell_weight: 1.
 # BenchmarkAgents node weight
 agent_weight: 1.
 
+# Period at which a new contact is created from the local neighborhood
+refresh_local_contacts: 10
+# Period at which agents create contacts among their contacts
+refresh_distant_contacts: 1
+
 BenchmarkAgent:
   # Move policy: RANDOM or MAX
   move_policy: MAX

@@ -70,7 +70,7 @@ class TestCase {
 			&BenchmarkAgent::move
 		};
 
-		fpmas::scheduler::detail::LambdaTask sync_graph_task{
+		fpmas::scheduler::detail::LambdaTask sync_graph_task {
 				[this] () {this->model.graph().synchronize();}
 				};
 		fpmas::scheduler::Job sync_graph {{sync_graph_task}};
