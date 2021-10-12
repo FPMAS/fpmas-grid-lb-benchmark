@@ -14,6 +14,14 @@ utility: LINEAR
 # Defines Agent interactions type: LOCAL or SMALL_WORLD
 agent_interactions: LOCAL
 
+BenchmarkAgent:
+  # Move policy: RANDOM or MAX
+  move_policy: MAX
+  # Perception range size
+  range_size: 1
+  # Max contacts count
+  max_contacts: 10
+
 # If CLUSTERED, defines a list of attractors.
 # An attractor is defined as [[x, y], radius]
 attractors: 

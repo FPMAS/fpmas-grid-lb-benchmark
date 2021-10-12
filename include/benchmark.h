@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fpmas.h"
 #include "fpmas/utils/perf.h"
 #include "output.h"

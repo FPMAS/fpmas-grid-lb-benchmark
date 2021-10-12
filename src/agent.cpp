@@ -1,7 +1,5 @@
 #include "agent.h"
 
-const RandomMovePolicy RandomMovePolicy::instance;
-
 BenchmarkCell* RandomMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCell> &mobility_field) const {
 	std::vector<float> utilities;
 	std::vector<BenchmarkCell*> cells;
@@ -24,7 +22,6 @@ BenchmarkCell* RandomMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCel
 	}
 	return cells[rd_index];
 }
-const MaxMovePolicy MaxMovePolicy::instance;
 
 BenchmarkCell* MaxMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCell> &mobility_field) const {
 	// Prevents bias when several cells have the max value
@@ -45,7 +42,9 @@ BenchmarkCell* MaxMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCell> 
 			)->first;
 }
 	
-const MovePolicyFunction* BenchmarkAgent::move_policy;
+std::size_t BenchmarkAgent::max_contacts;
+std::size_t BenchmarkAgent::range_size;
+MovePolicy BenchmarkAgent::move_policy;
 
 void BenchmarkAgent::to_json(nlohmann::json& j, const BenchmarkAgent* agent) {
 	j = agent->_contacts;
@@ -61,7 +60,17 @@ const std::deque<DistributedId>& BenchmarkAgent::contacts() const {
 
 void BenchmarkAgent::move() {
 	auto mobility_field = this->mobilityField();
-	this->moveTo(move_policy->selectCell(mobility_field));
+	BenchmarkCell* selected_cell;
+	switch(move_policy) {
+		case RANDOM:
+			selected_cell = RandomMovePolicy().selectCell(mobility_field);
+			break;
+		case MAX:
+			selected_cell = MaxMovePolicy().selectCell(mobility_field);
+			break;
+	};
+
+	this->moveTo(selected_cell);
 }
 
 void BenchmarkAgent::add_to_contacts(fpmas::api::model::Agent* agent) {

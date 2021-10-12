@@ -24,14 +24,6 @@ int main(int argc, char** argv) {
 		BenchmarkConfig config(argv[1]);
 		if(!config.is_valid)
 			return EXIT_FAILURE;
-		switch(config.move_policy) {
-			case RANDOM:
-				BenchmarkAgent::move_policy = &RandomMovePolicy::instance;
-				break;
-			case MAX:
-				BenchmarkAgent::move_policy = &MaxMovePolicy::instance;
-				break;
-		};
 
 		for(auto test_case : config.test_cases) {
 			fpmas::scheduler::Scheduler scheduler;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fpmas.h"
 #include "config.h"
 

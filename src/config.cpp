@@ -1,34 +1,26 @@
-#include "config.h"
+#include "agent.h"
 
-#define LOAD_YAML_CONFIG(FIELD_NAME, TYPENAME)\
-	{\
-	YAML::Node node = config[#FIELD_NAME];\
-	if(!node.IsDefined()) {\
-		std::cerr << "[FATAL ERROR] Missing configuration field: " #FIELD_NAME " (" #TYPENAME ")" << std::endl;\
-		this->is_valid = false;\
-	} else {\
-		try{\
-			this->FIELD_NAME = node.as<TYPENAME>();\
-		} catch (const YAML::TypedBadConversion<TYPENAME>& e) {\
-			this->is_valid = false;\
-			std::cerr << "[FATAL ERROR] Bad " #FIELD_NAME " field parsing. Expected type: " #TYPENAME << std::endl;\
-		}\
-	}\
-	}
+
+#define LOAD_YAML_CONFIG_0(FIELD_NAME, TYPENAME)\
+	load_config(#FIELD_NAME, FIELD_NAME, config[#FIELD_NAME], #TYPENAME)
+#define LOAD_YAML_CONFIG_1(ROOT, FIELD_NAME, TYPENAME)\
+	load_config(#ROOT "::" #FIELD_NAME, ROOT::FIELD_NAME, config[#ROOT][#FIELD_NAME], #TYPENAME)
 
 BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 	try {
 		YAML::Node config = YAML::LoadFile(config_file);
 
-		LOAD_YAML_CONFIG(grid_width, unsigned int);
-		LOAD_YAML_CONFIG(grid_height, unsigned int);
-		LOAD_YAML_CONFIG(occupation_rate, float);
-		LOAD_YAML_CONFIG(num_steps, fpmas::api::scheduler::TimeStep);
-		LOAD_YAML_CONFIG(utility, Utility);
-		LOAD_YAML_CONFIG(move_policy, MovePolicy);
-		LOAD_YAML_CONFIG(attractors, std::vector<Attractor>);
-		LOAD_YAML_CONFIG(agent_interactions, AgentInteractions);
-		LOAD_YAML_CONFIG(test_cases, std::vector<TestCaseConfig>);
+		LOAD_YAML_CONFIG_0(grid_width, unsigned int);
+		LOAD_YAML_CONFIG_0(grid_height, unsigned int);
+		LOAD_YAML_CONFIG_0(occupation_rate, float);
+		LOAD_YAML_CONFIG_0(num_steps, fpmas::api::scheduler::TimeStep);
+		LOAD_YAML_CONFIG_0(utility, Utility);
+		LOAD_YAML_CONFIG_1(BenchmarkAgent, move_policy, MovePolicy);
+		LOAD_YAML_CONFIG_1(BenchmarkAgent, range_size, unsigned int);
+		LOAD_YAML_CONFIG_1(BenchmarkAgent, max_contacts, unsigned int);
+		LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
+		LOAD_YAML_CONFIG_0(agent_interactions, AgentInteractions);
+		LOAD_YAML_CONFIG_0(test_cases, std::vector<TestCaseConfig>);
 	} catch(const YAML::BadFile&) {
 		this->is_valid = false;
 		std::cerr << "[FATAL ERROR] Config file not found: " << config_file << std::endl;

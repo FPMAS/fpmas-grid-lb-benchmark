@@ -1,3 +1,5 @@
+#pragma once
+
 #include "yaml-cpp/yaml.h"
 #include "fpmas/api/scheduler/scheduler.h"
 #include "fpmas/api/model/spatial/grid.h"
@@ -48,12 +50,36 @@ class BenchmarkConfig {
 		float occupation_rate;
 		fpmas::api::scheduler::TimeStep num_steps;
 		Utility utility;
-		MovePolicy move_policy;
 		std::vector<Attractor> attractors;
 		AgentInteractions agent_interactions;
 		std::vector<TestCaseConfig> test_cases;
 
 		BenchmarkConfig(std::string config_file);
+
+	private:
+		template<typename T>
+			void load_config(
+					std::string field_name, T& target, YAML::Node node,
+					std::string type_name
+					) {
+				if(!node.IsDefined()) {
+					std::cerr <<
+						"[FATAL ERROR] Missing configuration field: " + field_name +
+						" (" + type_name + ")"
+						<< std::endl;
+					this->is_valid = false;
+				} else {
+					try{
+						target = node.as<T>();
+					} catch (const YAML::TypedBadConversion<T>& e) {
+						this->is_valid = false;
+						std::cerr <<
+							"[FATAL ERROR] Bad " + field_name + " field parsing. "
+							"Expected type: " + type_name
+							<< std::endl;
+					}
+				}
+			}
 };
 
 namespace YAML {

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fpmas/io/json_output.h"
 #include "agent.h"
 
