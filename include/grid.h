@@ -39,6 +39,9 @@ class BenchmarkCell : public GridCellBase<BenchmarkCell> {
 
 struct UtilityFunction {
 	virtual float utility(Attractor attractor, DiscretePoint point) const = 0;
+
+	virtual ~UtilityFunction() {
+	}
 };
 
 struct UniformUtility : public UtilityFunction {
