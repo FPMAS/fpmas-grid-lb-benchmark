@@ -65,7 +65,7 @@ class InverseUtility : public UtilityFunction {
 		 *
 		 * @param offset distance at which the utility value is 1.f
 		 */
-		InverseUtility(float offset) : offset() {
+		InverseUtility(float offset) : offset(offset) {
 		}
 
 		float utility(Attractor attractor, DiscretePoint point) const override;

@@ -17,6 +17,10 @@ enum Utility {
 	UNIFORM, LINEAR, INVERSE, STEP
 };
 
+enum MovePolicy {
+	RANDOM, MAX
+};
+
 enum LbAlgorithm {
 	SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, RANDOM_LB
 };
@@ -44,6 +48,7 @@ class BenchmarkConfig {
 		float occupation_rate;
 		fpmas::api::scheduler::TimeStep num_steps;
 		Utility utility;
+		MovePolicy move_policy;
 		std::vector<Attractor> attractors;
 		AgentInteractions agent_interactions;
 		std::vector<TestCaseConfig> test_cases;
@@ -56,6 +61,12 @@ namespace YAML {
 		struct convert<Utility> {
 			static Node encode(const Utility& rhs);
 			static bool decode(const Node& node, Utility& rhs);
+		};
+
+	template<>
+		struct convert<MovePolicy> {
+			static Node encode(const MovePolicy& rhs);
+			static bool decode(const Node& node, MovePolicy& rhs);
 		};
 
 	template<>

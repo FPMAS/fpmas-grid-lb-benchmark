@@ -25,6 +25,7 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 		LOAD_YAML_CONFIG(occupation_rate, float);
 		LOAD_YAML_CONFIG(num_steps, fpmas::api::scheduler::TimeStep);
 		LOAD_YAML_CONFIG(utility, Utility);
+		LOAD_YAML_CONFIG(move_policy, MovePolicy);
 		LOAD_YAML_CONFIG(attractors, std::vector<Attractor>);
 		LOAD_YAML_CONFIG(agent_interactions, AgentInteractions);
 		LOAD_YAML_CONFIG(test_cases, std::vector<TestCaseConfig>);
@@ -66,6 +67,30 @@ namespace YAML {
 		}
 		if(str == "STEP") {
 			utility = STEP;
+			return true;
+		}
+		return false;
+	}
+
+	Node convert<MovePolicy>::encode(const MovePolicy& move_policy) {
+		switch(move_policy) {
+			case RANDOM:
+				return Node("RANDOM");
+			case MAX:
+				return Node("MAX");
+			default:
+				return Node();
+		}
+	}
+
+	bool convert<MovePolicy>::decode(const Node &node, MovePolicy& move_policy) {
+		std::string str = node.as<std::string>();
+		if(str == "RANDOM") {
+			move_policy = RANDOM;
+			return true;
+		}
+		if(str == "MAX") {
+			move_policy = MAX;
 			return true;
 		}
 		return false;

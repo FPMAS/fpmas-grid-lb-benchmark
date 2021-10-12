@@ -1,10 +1,30 @@
 #include "fpmas.h"
 #include "grid.h"
 
+struct MovePolicyFunction {
+	virtual BenchmarkCell* selectCell(
+			fpmas::model::Neighbors<BenchmarkCell>& mobility_field) const = 0;
+};
+
+struct RandomMovePolicy : public MovePolicyFunction {
+	static const RandomMovePolicy instance;
+
+	BenchmarkCell* selectCell(
+			fpmas::model::Neighbors<BenchmarkCell>& mobility_field) const override;
+};
+
+struct MaxMovePolicy : public MovePolicyFunction {
+	static const MaxMovePolicy instance;
+
+	BenchmarkCell* selectCell(
+			fpmas::model::Neighbors<BenchmarkCell>& mobility_field) const override;
+};
+
 class BenchmarkAgent : public GridAgent<BenchmarkAgent, BenchmarkCell> {
-	private:
+	public:
 		static const std::size_t max_contacts = 10;
 		static const std::size_t range_size = 1;
+		static const MovePolicyFunction* move_policy;
 
 		std::deque<DistributedId> _contacts;
 
