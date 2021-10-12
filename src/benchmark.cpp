@@ -86,6 +86,12 @@ TestCase::TestCase(
 				},
 				agent_factory, mapping);
 
+		// Static node weights
+		for(auto cell : cell_group.localAgents())
+			cell->node()->setWeight(config.cell_weight);
+		for(auto agent : move_group.localAgents())
+			agent->node()->setWeight(config.agent_weight);
+
 		model.graph().synchronize();
 
 		scheduler.schedule(0, lb_period, lb_probe.job);
@@ -97,8 +103,13 @@ TestCase::TestCase(
 		}
 		scheduler.schedule(0.23, 1, move_group.jobs());
 		scheduler.schedule(0.3, 1, csv_output.job());
+
 		fpmas::scheduler::TimeStep last_lb_date
 			= ((config.num_steps-1) / lb_period) * lb_period;
-		scheduler.schedule(last_lb_date + 0.01, cells_output.job());
-		scheduler.schedule(last_lb_date + 0.02, agents_output.job());
+		// Clears distant nodes
+		scheduler.schedule(last_lb_date + 0.01, sync_graph);
+		// JSON cell output
+		scheduler.schedule(last_lb_date + 0.02, cells_output.job());
+		// JSON agent output
+		scheduler.schedule(last_lb_date + 0.03, agents_output.job());
 }

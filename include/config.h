@@ -50,8 +50,10 @@ class BenchmarkConfig {
 		float occupation_rate;
 		fpmas::api::scheduler::TimeStep num_steps;
 		Utility utility;
-		std::vector<Attractor> attractors;
 		AgentInteractions agent_interactions;
+		float cell_weight;
+		float agent_weight;
+		std::vector<Attractor> attractors;
 		std::vector<TestCaseConfig> test_cases;
 
 		BenchmarkConfig(std::string config_file);

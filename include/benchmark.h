@@ -70,6 +70,12 @@ class TestCase {
 			&BenchmarkAgent::move
 		};
 
+		fpmas::scheduler::detail::LambdaTask sync_graph_task{
+				[this] () {this->model.graph().synchronize();}
+				};
+		fpmas::scheduler::Job sync_graph {{sync_graph_task}};
+
+
 	public:
 		GridModel<fpmas::synchro::GhostMode, BenchmarkCell> model;
 		std::string lb_algorithm_name;
