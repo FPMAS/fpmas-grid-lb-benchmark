@@ -33,7 +33,8 @@ int main(int argc, char** argv) {
 				switch(test_case.algorithm) {
 					case ZOLTAN_LB:
 						{
-							ZoltanLoadBalancing zoltan_lb(fpmas::communication::WORLD);
+							ZoltanLoadBalancing zoltan_lb(
+									fpmas::communication::WORLD, lb_period);
 							TestCase(
 									"zoltan_lb", config,
 									scheduler, runtime, zoltan_lb, lb_period
@@ -42,7 +43,8 @@ int main(int argc, char** argv) {
 						break;
 					case SCHEDULED_LB:
 						{
-							ZoltanLoadBalancing zoltan_lb(fpmas::communication::WORLD);
+							ZoltanLoadBalancing zoltan_lb(
+									fpmas::communication::WORLD, lb_period);
 							ScheduledLoadBalancing scheduled_load_balancing(
 									zoltan_lb, scheduler, runtime
 									);
@@ -67,7 +69,8 @@ int main(int argc, char** argv) {
 						break;
 					case ZOLTAN_CELL_LB:
 						{
-							ZoltanLoadBalancing zoltan_lb(fpmas::communication::WORLD);
+							ZoltanLoadBalancing zoltan_lb(
+									fpmas::communication::WORLD, lb_period);
 							CellLoadBalancing zoltan_cell_lb(
 									fpmas::communication::WORLD, zoltan_lb
 									);
