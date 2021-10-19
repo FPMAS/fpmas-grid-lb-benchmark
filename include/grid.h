@@ -24,6 +24,8 @@ class BenchmarkCell : public GridCellBase<BenchmarkCell> {
 			: GridCellBase<BenchmarkCell>(location), utility(utility) {
 			}
 
+		void update_edge_weights();
+
 		float getUtility() const {
 			return utility;
 		}

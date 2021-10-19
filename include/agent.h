@@ -22,6 +22,7 @@ class BenchmarkAgent : public GridAgent<BenchmarkAgent, BenchmarkCell> {
 	public:
 		static std::size_t max_contacts;
 		static std::size_t range_size;
+		static float contact_weight;
 		static MovePolicy move_policy;
 
 		std::deque<DistributedId> _contacts;

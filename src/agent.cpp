@@ -44,6 +44,7 @@ BenchmarkCell* MaxMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCell> 
 	
 std::size_t BenchmarkAgent::max_contacts;
 std::size_t BenchmarkAgent::range_size;
+float BenchmarkAgent::contact_weight;
 MovePolicy BenchmarkAgent::move_policy;
 
 void BenchmarkAgent::to_json(nlohmann::json& j, const BenchmarkAgent* agent) {
@@ -87,7 +88,7 @@ void BenchmarkAgent::add_to_contacts(fpmas::api::model::Agent* agent) {
 		_contacts.pop_front();
 	}
 	// Links the new contact...
-	this->model()->link(this, agent, CONTACT);
+	this->model()->link(this, agent, CONTACT)->setWeight(BenchmarkAgent::contact_weight);
 	// ... and adds it at the end of the queue
 	_contacts.push_back(agent->node()->getId());
 }

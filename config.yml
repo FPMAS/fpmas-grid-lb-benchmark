@@ -29,6 +29,8 @@ BenchmarkAgent:
   move_policy: MAX
   # Perception range size
   range_size: 1
+  # Contact edges weight
+  contact_weight: 1.
   # Max contacts count
   max_contacts: 10
 

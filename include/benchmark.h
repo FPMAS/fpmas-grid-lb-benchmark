@@ -56,7 +56,9 @@ class LoadBalancingProbe : public fpmas::api::model::LoadBalancing {
 
 class TestCase {
 	private:
-		IdleBehavior cell_behavior;
+		Behavior<BenchmarkCell> cell_behavior {
+			&BenchmarkCell::update_edge_weights
+		};
 		Behavior<BenchmarkAgent> create_relations_from_neighborhood {
 			&BenchmarkAgent::create_relations_from_neighborhood
 		};

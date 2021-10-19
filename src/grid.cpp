@@ -1,4 +1,12 @@
 #include "grid.h"
+#include "fpmas/api/model/spatial/spatial_model.h"
+
+void BenchmarkCell::update_edge_weights() {
+	std::size_t agent_count
+		= this->node()->getIncomingEdges(fpmas::api::model::LOCATION).size();
+	for(auto edge : this->node()->getOutgoingEdges(fpmas::api::model::CELL_SUCCESSOR))
+		edge->setWeight(agent_count);
+};
 
 float UniformUtility::utility(Attractor, DiscretePoint) const {
 	return 1.f;

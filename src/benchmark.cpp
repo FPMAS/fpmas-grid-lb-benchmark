@@ -95,7 +95,6 @@ TestCase::TestCase(
 		model.graph().synchronize();
 
 		scheduler.schedule(0, lb_period, lb_probe.job);
-		scheduler.schedule(0.1, 1, cell_group.jobs());
 		if(config.agent_interactions == SMALL_WORLD) {
 			scheduler.schedule(
 					0.20, config.refresh_local_contacts,
@@ -111,6 +110,7 @@ TestCase::TestCase(
 					);
 		}
 		scheduler.schedule(0.23, 1, move_group.jobs());
+		scheduler.schedule(0.24, 1, cell_group.jobs());
 		scheduler.schedule(0.3, 1, csv_output.job());
 
 		fpmas::scheduler::TimeStep last_lb_date
