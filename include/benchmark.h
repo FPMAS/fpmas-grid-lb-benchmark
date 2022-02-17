@@ -4,7 +4,7 @@
 #include "fpmas/utils/perf.h"
 #include "output.h"
 
-class LoadBalancingProbeTask : public fpmas::api::scheduler::Task {
+class LoadBalancingProbeTask : public fpmas::scheduler::Task {
 	private:
 		fpmas::api::scheduler::Task& lb_task;
 		fpmas::utils::perf::Monitor& monitor;

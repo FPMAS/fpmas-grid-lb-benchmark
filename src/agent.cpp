@@ -55,6 +55,19 @@ BenchmarkAgent* BenchmarkAgent::from_json(const nlohmann::json& j) {
 	return new BenchmarkAgent(j.get<std::deque<DistributedId>>());
 }
 
+std::size_t BenchmarkAgent::size(const fpmas::io::datapack::ObjectPack &o, const BenchmarkAgent *agent) {
+	return o.size(agent->_contacts);
+}
+
+void BenchmarkAgent::to_datapack(
+		fpmas::io::datapack::ObjectPack& o, const BenchmarkAgent* agent) {
+	o.put(agent->_contacts);
+}
+
+BenchmarkAgent* BenchmarkAgent::from_datapack(const fpmas::io::datapack::ObjectPack &o) {
+	return new BenchmarkAgent(o.get<std::deque<DistributedId>>());
+}
+
 const std::deque<DistributedId>& BenchmarkAgent::contacts() const {
 	return _contacts;
 }

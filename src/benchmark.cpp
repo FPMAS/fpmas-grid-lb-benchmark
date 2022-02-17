@@ -78,6 +78,7 @@ TestCase::TestCase(
 		fpmas::model::GridAgentBuilder<BenchmarkCell> agent_builder;
 		fpmas::model::DefaultSpatialAgentFactory<BenchmarkAgent> agent_factory;
 
+		model.graph().synchronize();
 		agent_builder.build(
 				model,
 				{

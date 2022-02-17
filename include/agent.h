@@ -89,4 +89,9 @@ class BenchmarkAgent : public GridAgent<BenchmarkAgent, BenchmarkCell> {
 
 		static void to_json(nlohmann::json& j, const BenchmarkAgent* agent);
 		static BenchmarkAgent* from_json(const nlohmann::json& j);
+
+		static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const BenchmarkAgent* agent);
+		static void to_datapack(
+				fpmas::io::datapack::ObjectPack& o, const BenchmarkAgent* agent);
+		static BenchmarkAgent* from_datapack(const fpmas::io::datapack::ObjectPack& o);
 };

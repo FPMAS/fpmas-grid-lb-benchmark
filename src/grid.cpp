@@ -8,6 +8,28 @@ void BenchmarkCell::update_edge_weights() {
 		edge->setWeight(agent_count);
 };
 
+void BenchmarkCell::to_json(nlohmann::json &j, const BenchmarkCell *cell) {
+	j = cell->utility;
+}
+
+BenchmarkCell* BenchmarkCell::from_json(const nlohmann::json& j) {
+	return new BenchmarkCell(j.get<float>());
+}
+
+std::size_t BenchmarkCell::size(
+		const fpmas::io::datapack::ObjectPack &o, const BenchmarkCell *cell) {
+	return o.size<float>();
+}
+
+void BenchmarkCell::to_datapack(
+		fpmas::io::datapack::ObjectPack &o, const BenchmarkCell *cell) {
+	o.put(cell->getUtility());
+}
+
+BenchmarkCell* BenchmarkCell::from_datapack(const fpmas::io::datapack::ObjectPack& o) {
+	return new BenchmarkCell(o.get<float>());
+}
+
 float UniformUtility::utility(Attractor, DiscretePoint) const {
 	return 1.f;
 }

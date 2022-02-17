@@ -2,7 +2,13 @@
 #include "benchmark.h"
 #include "fpmas/model/spatial/cell_load_balancing.h"
 
-FPMAS_JSON_SET_UP(
+FPMAS_BASE_DATAPACK_SET_UP(
+		GridCell::JsonBase,
+		BenchmarkAgent::JsonBase,
+		BenchmarkCell::JsonBase
+		);
+
+FPMAS_BASE_JSON_SET_UP(
 		GridCell::JsonBase,
 		BenchmarkAgent::JsonBase,
 		BenchmarkCell::JsonBase

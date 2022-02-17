@@ -30,13 +30,12 @@ class BenchmarkCell : public GridCellBase<BenchmarkCell> {
 			return utility;
 		}
 
-		static void to_json(nlohmann::json& j, const BenchmarkCell* cell) {
-			j = cell->utility;
-		}
+		static void to_json(nlohmann::json& j, const BenchmarkCell* cell);
+		static BenchmarkCell* from_json(const nlohmann::json& j);
 
-		static BenchmarkCell* from_json(const nlohmann::json& j) {
-			return new BenchmarkCell(j.get<float>());
-		}
+		static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const BenchmarkCell* cell);
+		static void to_datapack(fpmas::io::datapack::ObjectPack& o, const BenchmarkCell* cell);
+		static BenchmarkCell* from_datapack(const fpmas::io::datapack::ObjectPack& o);
 };
 
 struct UtilityFunction {
