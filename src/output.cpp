@@ -1,4 +1,4 @@
-#include "benchmark.h"
+#include "metamodel.h"
 
 BenchmarkAgentView::BenchmarkAgentView(const BenchmarkAgent* agent) :
 	id(agent->node()->getId()),
@@ -86,7 +86,7 @@ AgentsOutput::AgentsOutput(
 	}
 
 
-LoadBalancingCsvOutput::LoadBalancingCsvOutput(TestCase& test_case)
+LoadBalancingCsvOutput::LoadBalancingCsvOutput(MetaModel& test_case)
 	:
 		fpmas::io::FileOutput(test_case.lb_algorithm_name + ".%r.csv", test_case.model.getMpiCommunicator().getRank()),
 		LbCsvOutput(*this,

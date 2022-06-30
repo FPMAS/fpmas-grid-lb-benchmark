@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 get_filename_component(DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${DIR_NAME})
 
-find_package(fpmas 1.3 REQUIRED)
+find_package(fpmas 1.5 REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -17,7 +17,8 @@ add_executable(${PROJECT_NAME}
 	main.cpp
 	src/agent.cpp
 	src/grid.cpp
-	src/benchmark.cpp
+	src/probe.cpp
+	src/metamodel.cpp
 	src/config.cpp
 	src/output.cpp)
 include_directories(include)

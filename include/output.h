@@ -8,7 +8,7 @@ void dump_grid(
 		std::vector<BenchmarkCell*> local_cells
 		);
 
-class TestCase;
+class MetaModel;
 
 typedef fpmas::io::CsvOutput<
 fpmas::scheduler::Date, // Time Step
@@ -26,7 +26,7 @@ class LoadBalancingCsvOutput :
 		private:
 			fpmas::io::FileOutput file;
 		public:
-			LoadBalancingCsvOutput(TestCase& test_case);
+			LoadBalancingCsvOutput(MetaModel& test_case);
 	};
 
 class CellsOutput : public fpmas::io::OutputBase {

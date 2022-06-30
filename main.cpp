@@ -1,5 +1,5 @@
 #include "fpmas.h"
-#include "benchmark.h"
+#include "metamodel.h"
 #include "fpmas/model/spatial/cell_load_balancing.h"
 
 FPMAS_BASE_DATAPACK_SET_UP(
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 						{
 							ZoltanLoadBalancing zoltan_lb(
 									fpmas::communication::WORLD, lb_period);
-							TestCase(
+							MetaModel(
 									"zoltan_lb", config,
 									scheduler, runtime, zoltan_lb, lb_period
 									).run();
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 							ScheduledLoadBalancing scheduled_load_balancing(
 									zoltan_lb, scheduler, runtime
 									);
-							TestCase(
+							MetaModel(
 									"scheduled_lb", config,
 									scheduler, runtime, scheduled_load_balancing,
 									lb_period
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 									config.grid_width, config.grid_height,
 									fpmas::communication::WORLD
 									);
-							TestCase(
+							MetaModel(
 									"grid_lb", config,
 									scheduler, runtime, grid_lb, lb_period
 									).run();
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 							CellLoadBalancing zoltan_cell_lb(
 									fpmas::communication::WORLD, zoltan_lb
 									);
-							TestCase(
+							MetaModel(
 									"zoltan_cell_lb", config,
 									scheduler, runtime, zoltan_cell_lb, lb_period
 									).run();
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 						{
 
 							RandomLoadBalancing random_lb(fpmas::communication::WORLD);
-							TestCase(
+							MetaModel(
 									"random_lb", config,
 									scheduler, runtime, random_lb, lb_period
 									).run();
