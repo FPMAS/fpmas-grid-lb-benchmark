@@ -16,7 +16,7 @@ FetchContent_MakeAvailable(yaml-cpp)
 add_executable(${PROJECT_NAME}
 	main.cpp
 	src/agent.cpp
-	src/grid.cpp
+	src/cell.cpp
 	src/probe.cpp
 	src/metamodel.cpp
 	src/config.cpp

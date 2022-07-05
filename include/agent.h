@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fpmas.h"
-#include "grid.h"
+#include "cell.h"
 
 struct MovePolicyFunction {
 	virtual MetaGridCell* selectCell(

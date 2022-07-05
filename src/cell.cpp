@@ -1,34 +1,12 @@
-#include "grid.h"
+#include "cell.h"
 #include "fpmas/api/model/spatial/spatial_model.h"
 
-void MetaGridCell::update_edge_weights() {
+void MetaSpatialCell::update_edge_weights() {
 	std::size_t agent_count
 		= this->node()->getIncomingEdges(fpmas::api::model::LOCATION).size();
 	for(auto edge : this->node()->getOutgoingEdges(fpmas::api::model::CELL_SUCCESSOR))
 		edge->setWeight(agent_count);
 };
-
-void MetaGridCell::to_json(nlohmann::json &j, const MetaGridCell *cell) {
-	j = cell->utility;
-}
-
-MetaGridCell* MetaGridCell::from_json(const nlohmann::json& j) {
-	return new MetaGridCell(j.get<float>());
-}
-
-std::size_t MetaGridCell::size(
-		const fpmas::io::datapack::ObjectPack &o, const MetaGridCell *cell) {
-	return o.size<float>();
-}
-
-void MetaGridCell::to_datapack(
-		fpmas::io::datapack::ObjectPack &o, const MetaGridCell *cell) {
-	o.put(cell->getUtility());
-}
-
-MetaGridCell* MetaGridCell::from_datapack(const fpmas::io::datapack::ObjectPack& o) {
-	return new MetaGridCell(o.get<float>());
-}
 
 float UniformUtility::utility(Attractor, DiscretePoint) const {
 	return 1.f;
