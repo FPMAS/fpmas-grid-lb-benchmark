@@ -1,8 +1,8 @@
 #include "agent.h"
 
-BenchmarkCell* RandomMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCell> &mobility_field) const {
+MetaGridCell* RandomMovePolicy::selectCell(fpmas::model::Neighbors<MetaGridCell> &mobility_field) const {
 	std::vector<float> utilities;
-	std::vector<BenchmarkCell*> cells;
+	std::vector<MetaGridCell*> cells;
 
 	bool null_utilities = true;
 	for(auto cell : mobility_field) {
@@ -23,58 +23,58 @@ BenchmarkCell* RandomMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCel
 	return cells[rd_index];
 }
 
-BenchmarkCell* MaxMovePolicy::selectCell(fpmas::model::Neighbors<BenchmarkCell> &mobility_field) const {
+MetaGridCell* MaxMovePolicy::selectCell(fpmas::model::Neighbors<MetaGridCell> &mobility_field) const {
 	// Prevents bias when several cells have the max value
 	mobility_field.shuffle();
 
-	std::vector<std::pair<BenchmarkCell*, float>> cells;
+	std::vector<std::pair<MetaGridCell*, float>> cells;
 	for(auto cell : mobility_field) {
 		fpmas::model::ReadGuard read(cell);
 		cells.push_back({cell, cell->getUtility()});
 	}
 	return std::max_element(cells.begin(), cells.end(),
 			[] (
-				const std::pair<BenchmarkCell*, float>& a1,
-				const std::pair<BenchmarkCell*, float>& a2
+				const std::pair<MetaGridCell*, float>& a1,
+				const std::pair<MetaGridCell*, float>& a2
 			   ) {
 			return a1.second < a2.second;
 			}
 			)->first;
 }
 	
-std::size_t BenchmarkAgent::max_contacts;
-std::size_t BenchmarkAgent::range_size;
-float BenchmarkAgent::contact_weight;
-MovePolicy BenchmarkAgent::move_policy;
+std::size_t MetaAgent::max_contacts;
+std::size_t MetaAgent::range_size;
+float MetaAgent::contact_weight;
+MovePolicy MetaAgent::move_policy;
 
-void BenchmarkAgent::to_json(nlohmann::json& j, const BenchmarkAgent* agent) {
+void MetaAgent::to_json(nlohmann::json& j, const MetaAgent* agent) {
 	j = agent->_contacts;
 }
 
-BenchmarkAgent* BenchmarkAgent::from_json(const nlohmann::json& j) {
-	return new BenchmarkAgent(j.get<std::deque<DistributedId>>());
+MetaAgent* MetaAgent::from_json(const nlohmann::json& j) {
+	return new MetaAgent(j.get<std::deque<DistributedId>>());
 }
 
-std::size_t BenchmarkAgent::size(const fpmas::io::datapack::ObjectPack &o, const BenchmarkAgent *agent) {
+std::size_t MetaAgent::size(const fpmas::io::datapack::ObjectPack &o, const MetaAgent *agent) {
 	return o.size(agent->_contacts);
 }
 
-void BenchmarkAgent::to_datapack(
-		fpmas::io::datapack::ObjectPack& o, const BenchmarkAgent* agent) {
+void MetaAgent::to_datapack(
+		fpmas::io::datapack::ObjectPack& o, const MetaAgent* agent) {
 	o.put(agent->_contacts);
 }
 
-BenchmarkAgent* BenchmarkAgent::from_datapack(const fpmas::io::datapack::ObjectPack &o) {
-	return new BenchmarkAgent(o.get<std::deque<DistributedId>>());
+MetaAgent* MetaAgent::from_datapack(const fpmas::io::datapack::ObjectPack &o) {
+	return new MetaAgent(o.get<std::deque<DistributedId>>());
 }
 
-const std::deque<DistributedId>& BenchmarkAgent::contacts() const {
+const std::deque<DistributedId>& MetaAgent::contacts() const {
 	return _contacts;
 }
 
-void BenchmarkAgent::move() {
+void MetaAgent::move() {
 	auto mobility_field = this->mobilityField();
-	BenchmarkCell* selected_cell;
+	MetaGridCell* selected_cell;
 	switch(move_policy) {
 		case RANDOM:
 			selected_cell = RandomMovePolicy().selectCell(mobility_field);
@@ -87,7 +87,7 @@ void BenchmarkAgent::move() {
 	this->moveTo(selected_cell);
 }
 
-void BenchmarkAgent::add_to_contacts(fpmas::api::model::Agent* agent) {
+void MetaAgent::add_to_contacts(fpmas::api::model::Agent* agent) {
 	if(_contacts.size() == max_contacts) {
 		for(auto edge : this->node()->getOutgoingEdges(CONTACT)) {
 			// Finds the edge corresponding to the queue's head and unlinks it
@@ -101,16 +101,16 @@ void BenchmarkAgent::add_to_contacts(fpmas::api::model::Agent* agent) {
 		_contacts.pop_front();
 	}
 	// Links the new contact...
-	this->model()->link(this, agent, CONTACT)->setWeight(BenchmarkAgent::contact_weight);
+	this->model()->link(this, agent, CONTACT)->setWeight(MetaAgent::contact_weight);
 	// ... and adds it at the end of the queue
 	_contacts.push_back(agent->node()->getId());
 }
 
-bool BenchmarkAgent::is_in_contacts(DistributedId id) {
+bool MetaAgent::is_in_contacts(DistributedId id) {
 	return std::find(_contacts.begin(), _contacts.end(), id) != _contacts.end();
 }
 
-void BenchmarkAgent::create_relations_from_neighborhood() {
+void MetaAgent::create_relations_from_neighborhood() {
 	// Agents currently in the Moore neighborhood
 	auto perceptions = this->perceptions();
 	// Shuffles perceptions, to ensure that a random perception will be
@@ -132,8 +132,8 @@ void BenchmarkAgent::create_relations_from_neighborhood() {
 	}
 }
 
-void BenchmarkAgent::create_relations_from_contacts() {
-	auto contacts = this->outNeighbors<BenchmarkAgent>(CONTACT);
+void MetaAgent::create_relations_from_contacts() {
+	auto contacts = this->outNeighbors<MetaAgent>(CONTACT);
 	if(contacts.count() >= 2) {
 		// Selects a random contact and puts it at the begining of the list.
 		std::size_t random_index =
@@ -162,8 +162,8 @@ void BenchmarkAgent::create_relations_from_contacts() {
 	}
 }
 
-void BenchmarkAgent::handle_new_contacts() {
-	auto new_contacts = this->outNeighbors<BenchmarkAgent>(NEW_CONTACT);
+void MetaAgent::handle_new_contacts() {
+	auto new_contacts = this->outNeighbors<MetaAgent>(NEW_CONTACT);
 	for(auto new_contact : new_contacts) {
 		// Adds new_contact to this agent's contacts
 		add_to_contacts(new_contact);

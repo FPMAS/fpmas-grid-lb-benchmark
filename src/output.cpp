@@ -1,6 +1,6 @@
 #include "metamodel.h"
 
-BenchmarkAgentView::BenchmarkAgentView(const BenchmarkAgent* agent) :
+MetaAgentView::MetaAgentView(const MetaAgent* agent) :
 	id(agent->node()->getId()),
 	contacts(agent->contacts()),
 	location(agent->locationPoint()) {
@@ -8,15 +8,15 @@ BenchmarkAgentView::BenchmarkAgentView(const BenchmarkAgent* agent) :
 			perceptions.push_back(perception->getTargetNode()->getId());
 	}
 
-DistantBenchmarkAgentView::DistantBenchmarkAgentView(const BenchmarkAgent* agent) :
+DistantMetaAgentView::DistantMetaAgentView(const MetaAgent* agent) :
 	id(agent->node()->getId()),
 	rank(agent->node()->location()) {
 	}
 
 AgentsOutputView::AgentsOutputView(
 		int rank, std::size_t grid_width, std::size_t grid_height,
-		std::vector<BenchmarkAgentView> agents,
-		std::vector<DistantBenchmarkAgentView> distant_agents
+		std::vector<MetaAgentView> agents,
+		std::vector<DistantMetaAgentView> distant_agents
 		) :
 	rank(rank), grid_width(grid_width), grid_height(grid_height),
 	agents(agents), distant_agents(distant_agents) {
@@ -24,7 +24,7 @@ AgentsOutputView::AgentsOutputView(
 
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,
-		std::vector<BenchmarkCell*> local_cells) {
+		std::vector<MetaGridCell*> local_cells) {
 	typedef std::pair<fpmas::model::DiscretePoint, float> CellView;
 	std::vector<CellView> local_cells_view;
 	for(auto cell : local_cells)
@@ -57,18 +57,18 @@ AgentsOutput::AgentsOutput(
 	fpmas::io::JsonOutput<AgentsOutputView>(
 			output_file, [this, &model, grid_width, grid_height] () {
 
-			std::vector<BenchmarkAgentView> local_agents;
-			std::vector<DistantBenchmarkAgentView> distant_agents;
+			std::vector<MetaAgentView> local_agents;
+			std::vector<DistantMetaAgentView> distant_agents;
 			for(auto agent : this->model.getGroup(AGENT_GROUP).agents())
 				switch(agent->node()->state()) {
 					case fpmas::api::graph::LOCAL:
 						local_agents.emplace_back(
-								dynamic_cast<const BenchmarkAgent*>(agent)
+								dynamic_cast<const MetaAgent*>(agent)
 								);
 					break;
 					case fpmas::api::graph::DISTANT:
 						distant_agents.emplace_back(
-								dynamic_cast<const BenchmarkAgent*>(agent)
+								dynamic_cast<const MetaAgent*>(agent)
 								);
 					break;
 				}
@@ -154,7 +154,7 @@ std::vector<std::vector<int>> CellsOutput::gather_cells() {
 	std::vector<CellLocation> local_cells_location;
 	for(auto cell : local_cells)
 		local_cells_location.push_back({
-				dynamic_cast<BenchmarkCell*>(cell)->location(),
+				dynamic_cast<MetaGridCell*>(cell)->location(),
 				cell->node()->location()
 				});
 
@@ -176,16 +176,16 @@ std::vector<std::vector<int>> CellsOutput::gather_cells() {
 }
 
 namespace nlohmann {
-	void adl_serializer<BenchmarkAgentView>::to_json(
-			nlohmann::json& j, const BenchmarkAgentView &agent) {
+	void adl_serializer<MetaAgentView>::to_json(
+			nlohmann::json& j, const MetaAgentView &agent) {
 		j["id"] = agent.id;
 		j["contacts"] = agent.contacts;
 		j["perceptions"] = agent.perceptions;
 		j["location"] = agent.location;
 	}
 
-	void adl_serializer<DistantBenchmarkAgentView>::to_json(
-			nlohmann::json& j, const DistantBenchmarkAgentView &agent) {
+	void adl_serializer<DistantMetaAgentView>::to_json(
+			nlohmann::json& j, const DistantMetaAgentView &agent) {
 		j["id"] = agent.id;
 		j["rank"] = agent.rank;
 	}

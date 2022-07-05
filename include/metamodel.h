@@ -13,20 +13,20 @@ class BasicMetaModel {
 template<typename BaseModel>
 class MetaModel : BasicMetaModel {
 	private:
-		Behavior<BenchmarkCell> cell_behavior {
-			&BenchmarkCell::update_edge_weights
+		Behavior<MetaGridCell> cell_behavior {
+			&MetaGridCell::update_edge_weights
 		};
-		Behavior<BenchmarkAgent> create_relations_from_neighborhood {
-			&BenchmarkAgent::create_relations_from_neighborhood
+		Behavior<MetaAgent> create_relations_from_neighborhood {
+			&MetaAgent::create_relations_from_neighborhood
 		};
-		Behavior<BenchmarkAgent> create_relations_from_contacts {
-			&BenchmarkAgent::create_relations_from_contacts
+		Behavior<MetaAgent> create_relations_from_contacts {
+			&MetaAgent::create_relations_from_contacts
 		};
-		Behavior<BenchmarkAgent> handle_new_contacts {
-			&BenchmarkAgent::handle_new_contacts
+		Behavior<MetaAgent> handle_new_contacts {
+			&MetaAgent::handle_new_contacts
 		};
-		Behavior<BenchmarkAgent> move_behavior {
-			&BenchmarkAgent::move
+		Behavior<MetaAgent> move_behavior {
+			&MetaAgent::move
 		};
 
 		fpmas::scheduler::detail::LambdaTask sync_graph_task {
@@ -115,8 +115,8 @@ MetaModel<BaseModel>::MetaModel(
 				utility_function.reset(new StepUtility);
 				break;
 		}
-		BenchmarkCellFactory cell_factory(*utility_function, config.attractors);
-		MooreGrid<BenchmarkCell>::Builder grid(
+		MetaGridCellFactory cell_factory(*utility_function, config.attractors);
+		MooreGrid<MetaGridCell>::Builder grid(
 				cell_factory, config.grid_width, config.grid_height);
 
 		auto local_cells = grid.build(model, {cell_group});
@@ -126,8 +126,8 @@ MetaModel<BaseModel>::MetaModel(
 				config.grid_width, config.grid_height,
 				config.grid_width * config.grid_height * config.occupation_rate
 				);
-		fpmas::model::GridAgentBuilder<BenchmarkCell> agent_builder;
-		fpmas::model::DefaultSpatialAgentFactory<BenchmarkAgent> agent_factory;
+		fpmas::model::GridAgentBuilder<MetaGridCell> agent_builder;
+		fpmas::model::DefaultSpatialAgentFactory<MetaAgent> agent_factory;
 
 		model.graph().synchronize();
 		agent_builder.build(

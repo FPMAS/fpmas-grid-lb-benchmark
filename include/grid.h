@@ -5,23 +5,23 @@
 
 using namespace fpmas::model;
 
-class BenchmarkCell : public GridCellBase<BenchmarkCell> {
+class MetaGridCell : public GridCellBase<MetaGridCell> {
 	private:
 		float utility;
 
 		// For JSON serialization
-		BenchmarkCell(float utility)
+		MetaGridCell(float utility)
 			: utility(utility) {
 			}
 
 	public:
 		// For edge migration optimization purpose only
-		BenchmarkCell() {
+		MetaGridCell() {
 		}
 
 		// For cell factory
-		BenchmarkCell(DiscretePoint location, float utility)
-			: GridCellBase<BenchmarkCell>(location), utility(utility) {
+		MetaGridCell(DiscretePoint location, float utility)
+			: GridCellBase<MetaGridCell>(location), utility(utility) {
 			}
 
 		void update_edge_weights();
@@ -30,12 +30,12 @@ class BenchmarkCell : public GridCellBase<BenchmarkCell> {
 			return utility;
 		}
 
-		static void to_json(nlohmann::json& j, const BenchmarkCell* cell);
-		static BenchmarkCell* from_json(const nlohmann::json& j);
+		static void to_json(nlohmann::json& j, const MetaGridCell* cell);
+		static MetaGridCell* from_json(const nlohmann::json& j);
 
-		static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const BenchmarkCell* cell);
-		static void to_datapack(fpmas::io::datapack::ObjectPack& o, const BenchmarkCell* cell);
-		static BenchmarkCell* from_datapack(const fpmas::io::datapack::ObjectPack& o);
+		static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const MetaGridCell* cell);
+		static void to_datapack(fpmas::io::datapack::ObjectPack& o, const MetaGridCell* cell);
+		static MetaGridCell* from_datapack(const fpmas::io::datapack::ObjectPack& o);
 };
 
 struct UtilityFunction {
@@ -82,17 +82,17 @@ struct StepUtility : public UtilityFunction {
 };
 
 
-class BenchmarkCellFactory : public fpmas::api::model::GridCellFactory<BenchmarkCell> {
+class MetaGridCellFactory : public fpmas::api::model::GridCellFactory<MetaGridCell> {
 	public:
 		const UtilityFunction& utility_function;
 		std::vector<Attractor> attractors;
 
-		BenchmarkCellFactory(
+		MetaGridCellFactory(
 				const UtilityFunction& utility_function,
 				std::vector<Attractor> attractors
 				) : utility_function(utility_function), attractors(attractors) {
 		}
 
-		BenchmarkCell* build(DiscretePoint location) override;
+		MetaGridCell* build(DiscretePoint location) override;
 };
 

@@ -1,33 +1,33 @@
 #include "grid.h"
 #include "fpmas/api/model/spatial/spatial_model.h"
 
-void BenchmarkCell::update_edge_weights() {
+void MetaGridCell::update_edge_weights() {
 	std::size_t agent_count
 		= this->node()->getIncomingEdges(fpmas::api::model::LOCATION).size();
 	for(auto edge : this->node()->getOutgoingEdges(fpmas::api::model::CELL_SUCCESSOR))
 		edge->setWeight(agent_count);
 };
 
-void BenchmarkCell::to_json(nlohmann::json &j, const BenchmarkCell *cell) {
+void MetaGridCell::to_json(nlohmann::json &j, const MetaGridCell *cell) {
 	j = cell->utility;
 }
 
-BenchmarkCell* BenchmarkCell::from_json(const nlohmann::json& j) {
-	return new BenchmarkCell(j.get<float>());
+MetaGridCell* MetaGridCell::from_json(const nlohmann::json& j) {
+	return new MetaGridCell(j.get<float>());
 }
 
-std::size_t BenchmarkCell::size(
-		const fpmas::io::datapack::ObjectPack &o, const BenchmarkCell *cell) {
+std::size_t MetaGridCell::size(
+		const fpmas::io::datapack::ObjectPack &o, const MetaGridCell *cell) {
 	return o.size<float>();
 }
 
-void BenchmarkCell::to_datapack(
-		fpmas::io::datapack::ObjectPack &o, const BenchmarkCell *cell) {
+void MetaGridCell::to_datapack(
+		fpmas::io::datapack::ObjectPack &o, const MetaGridCell *cell) {
 	o.put(cell->getUtility());
 }
 
-BenchmarkCell* BenchmarkCell::from_datapack(const fpmas::io::datapack::ObjectPack& o) {
-	return new BenchmarkCell(o.get<float>());
+MetaGridCell* MetaGridCell::from_datapack(const fpmas::io::datapack::ObjectPack& o) {
+	return new MetaGridCell(o.get<float>());
 }
 
 float UniformUtility::utility(Attractor, DiscretePoint) const {
@@ -62,11 +62,11 @@ float StepUtility::utility(Attractor attractor, DiscretePoint point) const {
 		return 1.f;
 }
 
-BenchmarkCell* BenchmarkCellFactory::build(fpmas::model::DiscretePoint location) {
+MetaGridCell* MetaGridCellFactory::build(fpmas::model::DiscretePoint location) {
 	float utility = 0;
 	for(auto attractor : attractors) {
 		utility += utility_function.utility(attractor, location);
 	}
-	return new BenchmarkCell(location, utility);
+	return new MetaGridCell(location, utility);
 }
 

@@ -5,7 +5,7 @@
 
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,
-		std::vector<BenchmarkCell*> local_cells
+		std::vector<MetaGridCell*> local_cells
 		);
 
 class BasicMetaModel;
@@ -57,33 +57,33 @@ class CellsOutput : public fpmas::io::OutputBase {
 		void dump() override;
 };
 
-struct BenchmarkAgentView {
+struct MetaAgentView {
 	DistributedId id;
 	std::deque<DistributedId> contacts;
 	std::vector<DistributedId> perceptions;
 	DiscretePoint location;
 
-	BenchmarkAgentView(const BenchmarkAgent* agent);
+	MetaAgentView(const MetaAgent* agent);
 };
 
-struct DistantBenchmarkAgentView {
+struct DistantMetaAgentView {
 	DistributedId id;
 	int rank;
 
-	DistantBenchmarkAgentView(const BenchmarkAgent* agent);
+	DistantMetaAgentView(const MetaAgent* agent);
 };
 
 struct AgentsOutputView {
 	int rank;
 	std::size_t grid_width;
 	std::size_t grid_height;
-	std::vector<BenchmarkAgentView> agents;
-	std::vector<DistantBenchmarkAgentView> distant_agents;
+	std::vector<MetaAgentView> agents;
+	std::vector<DistantMetaAgentView> distant_agents;
 
 	AgentsOutputView(
 			int rank, std::size_t grid_width, std::size_t grid_height,
-			std::vector<BenchmarkAgentView> agents,
-			std::vector<DistantBenchmarkAgentView> distant_agents
+			std::vector<MetaAgentView> agents,
+			std::vector<DistantMetaAgentView> distant_agents
 			);
 };
 
@@ -133,13 +133,13 @@ class AgentsOutput : public fpmas::io::JsonOutput<AgentsOutputView> {
 
 namespace nlohmann {
 	template<>
-		struct adl_serializer<BenchmarkAgentView> {
-			static void to_json(nlohmann::json& json, const BenchmarkAgentView& agent);
+		struct adl_serializer<MetaAgentView> {
+			static void to_json(nlohmann::json& json, const MetaAgentView& agent);
 		};
 
 	template<>
-		struct adl_serializer<DistantBenchmarkAgentView> {
-			static void to_json(nlohmann::json& json, const DistantBenchmarkAgentView& agent);
+		struct adl_serializer<DistantMetaAgentView> {
+			static void to_json(nlohmann::json& json, const DistantMetaAgentView& agent);
 		};
 
 	template<>

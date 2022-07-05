@@ -4,21 +4,21 @@
 #include "grid.h"
 
 struct MovePolicyFunction {
-	virtual BenchmarkCell* selectCell(
-			fpmas::model::Neighbors<BenchmarkCell>& mobility_field) const = 0;
+	virtual MetaGridCell* selectCell(
+			fpmas::model::Neighbors<MetaGridCell>& mobility_field) const = 0;
 };
 
 struct RandomMovePolicy : public MovePolicyFunction {
-	BenchmarkCell* selectCell(
-			fpmas::model::Neighbors<BenchmarkCell>& mobility_field) const override;
+	MetaGridCell* selectCell(
+			fpmas::model::Neighbors<MetaGridCell>& mobility_field) const override;
 };
 
 struct MaxMovePolicy : public MovePolicyFunction {
-	BenchmarkCell* selectCell(
-			fpmas::model::Neighbors<BenchmarkCell>& mobility_field) const override;
+	MetaGridCell* selectCell(
+			fpmas::model::Neighbors<MetaGridCell>& mobility_field) const override;
 };
 
-class BenchmarkAgent : public GridAgent<BenchmarkAgent, BenchmarkCell> {
+class MetaAgent : public GridAgent<MetaAgent, MetaGridCell> {
 	public:
 		static std::size_t max_contacts;
 		static std::size_t range_size;
@@ -42,10 +42,10 @@ class BenchmarkAgent : public GridAgent<BenchmarkAgent, BenchmarkCell> {
 		bool is_in_contacts(DistributedId id);
 
 	public:
-		MooreRange<MooreGrid<BenchmarkCell>> range;
+		MooreRange<MooreGrid<MetaGridCell>> range;
 
-		BenchmarkAgent() : range(range_size) {}
-		BenchmarkAgent(const std::deque<DistributedId>& contacts)
+		MetaAgent() : range(range_size) {}
+		MetaAgent(const std::deque<DistributedId>& contacts)
 			: _contacts(contacts), range(range_size) {}
 
 		FPMAS_MOBILITY_RANGE(range);
@@ -87,11 +87,11 @@ class BenchmarkAgent : public GridAgent<BenchmarkAgent, BenchmarkCell> {
 		 */
 		void move();
 
-		static void to_json(nlohmann::json& j, const BenchmarkAgent* agent);
-		static BenchmarkAgent* from_json(const nlohmann::json& j);
+		static void to_json(nlohmann::json& j, const MetaAgent* agent);
+		static MetaAgent* from_json(const nlohmann::json& j);
 
-		static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const BenchmarkAgent* agent);
+		static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const MetaAgent* agent);
 		static void to_datapack(
-				fpmas::io::datapack::ObjectPack& o, const BenchmarkAgent* agent);
-		static BenchmarkAgent* from_datapack(const fpmas::io::datapack::ObjectPack& o);
+				fpmas::io::datapack::ObjectPack& o, const MetaAgent* agent);
+		static MetaAgent* from_datapack(const fpmas::io::datapack::ObjectPack& o);
 };

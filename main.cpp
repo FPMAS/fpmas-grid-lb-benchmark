@@ -4,25 +4,25 @@
 
 FPMAS_BASE_DATAPACK_SET_UP(
 		GridCell::JsonBase,
-		BenchmarkAgent::JsonBase,
-		BenchmarkCell::JsonBase
+		MetaAgent::JsonBase,
+		MetaGridCell::JsonBase
 		);
 
 FPMAS_BASE_JSON_SET_UP(
 		GridCell::JsonBase,
-		BenchmarkAgent::JsonBase,
-		BenchmarkCell::JsonBase
+		MetaAgent::JsonBase,
+		MetaGridCell::JsonBase
 		);
 
 using namespace fpmas::synchro;
 
-typedef GridModel<GhostMode, BenchmarkCell> MetaGridModel;
+typedef GridModel<GhostMode, MetaGridCell> MetaGridModel;
 
 int main(int argc, char** argv) {
 	FPMAS_REGISTER_AGENT_TYPES(
 			GridCell::JsonBase,
-			BenchmarkAgent::JsonBase,
-			BenchmarkCell::JsonBase
+			MetaAgent::JsonBase,
+			MetaGridCell::JsonBase
 			);
 	if(argc <= 1) {
 		std::cerr << "[FATAL ERROR] Missing config file argument" << std::endl;
