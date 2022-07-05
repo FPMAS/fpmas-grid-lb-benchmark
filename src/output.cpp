@@ -86,47 +86,49 @@ AgentsOutput::AgentsOutput(
 	}
 
 
-LoadBalancingCsvOutput::LoadBalancingCsvOutput(MetaModel& test_case)
+LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
 	:
-		fpmas::io::FileOutput(test_case.lb_algorithm_name + ".%r.csv", test_case.model.getMpiCommunicator().getRank()),
+		fpmas::io::FileOutput(
+				metamodel.getLoadBalancingAlgorithmeName() + ".%r.csv",
+				metamodel.getModel().getMpiCommunicator().getRank()),
 		LbCsvOutput(*this,
-			{"TIME", [&test_case] {return test_case.model.runtime().currentDate();}},
-			{"BALANCE_TIME", [&test_case] {
+			{"TIME", [&metamodel] {return metamodel.getModel().runtime().currentDate();}},
+			{"BALANCE_TIME", [&metamodel] {
 			auto result = std::chrono::duration_cast<std::chrono::microseconds>(
-					test_case.lb_probe.monitor.totalDuration("BALANCE")
+					metamodel.getLoadBalancingProbe().monitor.totalDuration("BALANCE")
 					).count();
 			return result;
 			}},
-			{"DISTRIBUTE_TIME", [&test_case] {
+			{"DISTRIBUTE_TIME", [&metamodel] {
 			auto result = std::chrono::duration_cast<std::chrono::microseconds>(
-					test_case.lb_probe.monitor.totalDuration("DISTRIBUTE")
+					metamodel.getLoadBalancingProbe().monitor.totalDuration("DISTRIBUTE")
 					).count();
-			test_case.lb_probe.monitor.clear();
+			metamodel.getLoadBalancingProbe().monitor.clear();
 			return result;
 			}},
-			{"AGENTS", [&test_case] {
+			{"AGENTS", [&metamodel] {
 			float total_weight = 0;
-			for(auto agent : test_case.model.getGroup(AGENT_GROUP).localAgents())
+			for(auto agent : metamodel.getModel().getGroup(AGENT_GROUP).localAgents())
 				total_weight += agent->node()->getWeight();
 			return total_weight;
 			}},
-			{"CELLS", [&test_case] {
+			{"CELLS", [&metamodel] {
 			float total_weight = 0;
-			for(auto agent : test_case.model.getGroup(CELL_GROUP).localAgents())
+			for(auto agent : metamodel.getModel().getGroup(CELL_GROUP).localAgents())
 				total_weight += agent->node()->getWeight();
 			return total_weight;
 			}},
-			{"DISTANT_AGENT_EDGES", [&test_case] {
+			{"DISTANT_AGENT_EDGES", [&metamodel] {
 			float total_weight = 0;
-			for(auto agent : test_case.model.getGroup(AGENT_GROUP).localAgents())
+			for(auto agent : metamodel.getModel().getGroup(AGENT_GROUP).localAgents())
 				for(auto edge : agent->node()->getOutgoingEdges())
 					if(edge->state() == fpmas::api::graph::DISTANT)
 						total_weight+=edge->getWeight();
 			return total_weight;
 			}},
-			{"DISTANT_CELL_EDGES", [&test_case] {
+			{"DISTANT_CELL_EDGES", [&metamodel] {
 			float total_weight = 0;
-			for(auto cell : test_case.model.getGroup(CELL_GROUP).localAgents())
+			for(auto cell : metamodel.getModel().getGroup(CELL_GROUP).localAgents())
 				for(auto edge : cell->node()->getOutgoingEdges())
 					if(edge->state() == fpmas::api::graph::DISTANT)
 						total_weight+=edge->getWeight();

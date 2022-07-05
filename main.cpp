@@ -14,6 +14,10 @@ FPMAS_BASE_JSON_SET_UP(
 		BenchmarkCell::JsonBase
 		);
 
+using namespace fpmas::synchro;
+
+typedef GridModel<GhostMode, BenchmarkCell> MetaGridModel;
+
 int main(int argc, char** argv) {
 	FPMAS_REGISTER_AGENT_TYPES(
 			GridCell::JsonBase,
@@ -41,7 +45,7 @@ int main(int argc, char** argv) {
 						{
 							ZoltanLoadBalancing zoltan_lb(
 									fpmas::communication::WORLD, lb_period);
-							MetaModel(
+							MetaModel<MetaGridModel>(
 									"zoltan_lb", config,
 									scheduler, runtime, zoltan_lb, lb_period
 									).run();
@@ -54,7 +58,7 @@ int main(int argc, char** argv) {
 							ScheduledLoadBalancing scheduled_load_balancing(
 									zoltan_lb, scheduler, runtime
 									);
-							MetaModel(
+							MetaModel<MetaGridModel>(
 									"scheduled_lb", config,
 									scheduler, runtime, scheduled_load_balancing,
 									lb_period
@@ -67,7 +71,7 @@ int main(int argc, char** argv) {
 									config.grid_width, config.grid_height,
 									fpmas::communication::WORLD
 									);
-							MetaModel(
+							MetaModel<MetaGridModel>(
 									"grid_lb", config,
 									scheduler, runtime, grid_lb, lb_period
 									).run();
@@ -80,7 +84,7 @@ int main(int argc, char** argv) {
 							CellLoadBalancing zoltan_cell_lb(
 									fpmas::communication::WORLD, zoltan_lb
 									);
-							MetaModel(
+							MetaModel<MetaGridModel>(
 									"zoltan_cell_lb", config,
 									scheduler, runtime, zoltan_cell_lb, lb_period
 									).run();
@@ -90,7 +94,7 @@ int main(int argc, char** argv) {
 						{
 
 							RandomLoadBalancing random_lb(fpmas::communication::WORLD);
-							MetaModel(
+							MetaModel<MetaGridModel>(
 									"random_lb", config,
 									scheduler, runtime, random_lb, lb_period
 									).run();
