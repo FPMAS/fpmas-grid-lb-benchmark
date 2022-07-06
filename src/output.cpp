@@ -1,14 +1,17 @@
 #include "metamodel.h"
 
-MetaAgentView::MetaAgentView(const MetaAgent* agent) :
+MetaAgentView::MetaAgentView(const MetaAgentBase* agent) :
 	id(agent->node()->getId()),
-	contacts(agent->contacts()),
-	location(agent->locationPoint()) {
+	contacts(agent->contacts()) {
 		for(auto perception : agent->node()->getOutgoingEdges(fpmas::api::model::PERCEPTION))
 			perceptions.push_back(perception->getTargetNode()->getId());
 	}
 
-DistantMetaAgentView::DistantMetaAgentView(const MetaAgent* agent) :
+MetaGridAgentView::MetaGridAgentView(const MetaGridAgent* agent)
+	: MetaAgentView(agent), location(agent->locationPoint()) {
+	}
+
+DistantAgentView::DistantAgentView(const fpmas::api::model::Agent* agent) :
 	id(agent->node()->getId()),
 	rank(agent->node()->location()) {
 	}
@@ -16,7 +19,7 @@ DistantMetaAgentView::DistantMetaAgentView(const MetaAgent* agent) :
 AgentsOutputView::AgentsOutputView(
 		int rank, std::size_t grid_width, std::size_t grid_height,
 		std::vector<MetaAgentView> agents,
-		std::vector<DistantMetaAgentView> distant_agents
+		std::vector<DistantAgentView> distant_agents
 		) :
 	rank(rank), grid_width(grid_width), grid_height(grid_height),
 	agents(agents), distant_agents(distant_agents) {
@@ -58,18 +61,16 @@ AgentsOutput::AgentsOutput(
 			output_file, [this, &model, grid_width, grid_height] () {
 
 			std::vector<MetaAgentView> local_agents;
-			std::vector<DistantMetaAgentView> distant_agents;
+			std::vector<DistantAgentView> distant_agents;
 			for(auto agent : this->model.getGroup(AGENT_GROUP).agents())
 				switch(agent->node()->state()) {
 					case fpmas::api::graph::LOCAL:
 						local_agents.emplace_back(
-								dynamic_cast<const MetaAgent*>(agent)
+								dynamic_cast<const MetaGridAgent*>(agent)
 								);
 					break;
 					case fpmas::api::graph::DISTANT:
-						distant_agents.emplace_back(
-								dynamic_cast<const MetaAgent*>(agent)
-								);
+						distant_agents.emplace_back(agent);
 					break;
 				}
 			return AgentsOutputView(
@@ -181,11 +182,16 @@ namespace nlohmann {
 		j["id"] = agent.id;
 		j["contacts"] = agent.contacts;
 		j["perceptions"] = agent.perceptions;
+	}
+
+	void adl_serializer<MetaGridAgentView>::to_json(
+			nlohmann::json& j, const MetaGridAgentView &agent) {
+		j = (const MetaAgentView&) agent;
 		j["location"] = agent.location;
 	}
 
-	void adl_serializer<DistantMetaAgentView>::to_json(
-			nlohmann::json& j, const DistantMetaAgentView &agent) {
+	void adl_serializer<DistantAgentView>::to_json(
+			nlohmann::json& j, const DistantAgentView &agent) {
 		j["id"] = agent.id;
 		j["rank"] = agent.rank;
 	}

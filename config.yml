@@ -24,7 +24,7 @@ refresh_local_contacts: 10
 # Period at which agents create contacts among their contacts
 refresh_distant_contacts: 1
 
-MetaAgent:
+MetaAgentBase:
   # Move policy: RANDOM or MAX
   move_policy: MAX
   # Perception range size

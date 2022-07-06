@@ -61,16 +61,21 @@ struct MetaAgentView {
 	DistributedId id;
 	std::deque<DistributedId> contacts;
 	std::vector<DistributedId> perceptions;
-	DiscretePoint location;
 
-	MetaAgentView(const MetaAgent* agent);
+	MetaAgentView(const MetaAgentBase* agent);
 };
 
-struct DistantMetaAgentView {
+struct MetaGridAgentView : public MetaAgentView {
+	DiscretePoint location;
+
+	MetaGridAgentView(const MetaGridAgent* agent);
+};
+
+struct DistantAgentView {
 	DistributedId id;
 	int rank;
 
-	DistantMetaAgentView(const MetaAgent* agent);
+	DistantAgentView(const fpmas::api::model::Agent* agent);
 };
 
 struct AgentsOutputView {
@@ -78,12 +83,12 @@ struct AgentsOutputView {
 	std::size_t grid_width;
 	std::size_t grid_height;
 	std::vector<MetaAgentView> agents;
-	std::vector<DistantMetaAgentView> distant_agents;
+	std::vector<DistantAgentView> distant_agents;
 
 	AgentsOutputView(
 			int rank, std::size_t grid_width, std::size_t grid_height,
 			std::vector<MetaAgentView> agents,
-			std::vector<DistantMetaAgentView> distant_agents
+			std::vector<DistantAgentView> distant_agents
 			);
 };
 
@@ -136,10 +141,14 @@ namespace nlohmann {
 		struct adl_serializer<MetaAgentView> {
 			static void to_json(nlohmann::json& json, const MetaAgentView& agent);
 		};
+	template<>
+		struct adl_serializer<MetaGridAgentView> {
+			static void to_json(nlohmann::json& json, const MetaGridAgentView& agent);
+		};
 
 	template<>
-		struct adl_serializer<DistantMetaAgentView> {
-			static void to_json(nlohmann::json& json, const DistantMetaAgentView& agent);
+		struct adl_serializer<DistantAgentView> {
+			static void to_json(nlohmann::json& json, const DistantAgentView& agent);
 		};
 
 	template<>

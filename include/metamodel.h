@@ -10,23 +10,23 @@ class BasicMetaModel {
 		virtual fpmas::api::model::Model& getModel() = 0;
 };
 
-template<typename BaseModel>
+template<typename BaseModel, typename AgentType>
 class MetaModel : BasicMetaModel {
 	private:
 		Behavior<MetaGridCell> cell_behavior {
 			&MetaGridCell::update_edge_weights
 		};
-		Behavior<MetaAgent> create_relations_from_neighborhood {
-			&MetaAgent::create_relations_from_neighborhood
+		Behavior<AgentType> create_relations_from_neighborhood {
+			&AgentType::create_relations_from_neighborhood
 		};
-		Behavior<MetaAgent> create_relations_from_contacts {
-			&MetaAgent::create_relations_from_contacts
+		Behavior<AgentType> create_relations_from_contacts {
+			&AgentType::create_relations_from_contacts
 		};
-		Behavior<MetaAgent> handle_new_contacts {
-			&MetaAgent::handle_new_contacts
+		Behavior<AgentType> handle_new_contacts {
+			&AgentType::handle_new_contacts
 		};
-		Behavior<MetaAgent> move_behavior {
-			&MetaAgent::move
+		Behavior<AgentType> move_behavior {
+			&AgentType::move
 		};
 
 		fpmas::scheduler::detail::LambdaTask sync_graph_task {
@@ -72,8 +72,8 @@ class MetaModel : BasicMetaModel {
 		}
 };
 
-template<typename BaseModel>
-MetaModel<BaseModel>::MetaModel(
+template<typename BaseModel, typename AgentType>
+MetaModel<BaseModel, AgentType>::MetaModel(
 		std::string lb_algorithm_name, BenchmarkConfig config,
 		fpmas::api::scheduler::Scheduler& scheduler,
 		fpmas::api::runtime::Runtime& runtime,
@@ -127,7 +127,7 @@ MetaModel<BaseModel>::MetaModel(
 				config.grid_width * config.grid_height * config.occupation_rate
 				);
 		fpmas::model::GridAgentBuilder<MetaGridCell> agent_builder;
-		fpmas::model::DefaultSpatialAgentFactory<MetaAgent> agent_factory;
+		fpmas::model::DefaultSpatialAgentFactory<AgentType> agent_factory;
 
 		model.graph().synchronize();
 		agent_builder.build(

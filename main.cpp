@@ -4,13 +4,13 @@
 
 FPMAS_BASE_DATAPACK_SET_UP(
 		GridCell::JsonBase,
-		MetaAgent::JsonBase,
+		MetaGridAgent::JsonBase,
 		MetaGridCell::JsonBase
 		);
 
 FPMAS_BASE_JSON_SET_UP(
 		GridCell::JsonBase,
-		MetaAgent::JsonBase,
+		MetaGridAgent::JsonBase,
 		MetaGridCell::JsonBase
 		);
 
@@ -21,7 +21,7 @@ typedef GridModel<GhostMode, MetaGridCell> MetaGridModel;
 int main(int argc, char** argv) {
 	FPMAS_REGISTER_AGENT_TYPES(
 			GridCell::JsonBase,
-			MetaAgent::JsonBase,
+			MetaGridAgent::JsonBase,
 			MetaGridCell::JsonBase
 			);
 	if(argc <= 1) {
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 						{
 							ZoltanLoadBalancing zoltan_lb(
 									fpmas::communication::WORLD, lb_period);
-							MetaModel<MetaGridModel>(
+							MetaModel<MetaGridModel, MetaGridAgent>(
 									"zoltan_lb", config,
 									scheduler, runtime, zoltan_lb, lb_period
 									).run();
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 							ScheduledLoadBalancing scheduled_load_balancing(
 									zoltan_lb, scheduler, runtime
 									);
-							MetaModel<MetaGridModel>(
+							MetaModel<MetaGridModel, MetaGridAgent>(
 									"scheduled_lb", config,
 									scheduler, runtime, scheduled_load_balancing,
 									lb_period
@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 									config.grid_width, config.grid_height,
 									fpmas::communication::WORLD
 									);
-							MetaModel<MetaGridModel>(
+							MetaModel<MetaGridModel, MetaGridAgent>(
 									"grid_lb", config,
 									scheduler, runtime, grid_lb, lb_period
 									).run();
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 							CellLoadBalancing zoltan_cell_lb(
 									fpmas::communication::WORLD, zoltan_lb
 									);
-							MetaModel<MetaGridModel>(
+							MetaModel<MetaGridModel, MetaGridAgent>(
 									"zoltan_cell_lb", config,
 									scheduler, runtime, zoltan_cell_lb, lb_period
 									).run();
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 						{
 
 							RandomLoadBalancing random_lb(fpmas::communication::WORLD);
-							MetaModel<MetaGridModel>(
+							MetaModel<MetaGridModel, MetaGridAgent>(
 									"random_lb", config,
 									scheduler, runtime, random_lb, lb_period
 									).run();
