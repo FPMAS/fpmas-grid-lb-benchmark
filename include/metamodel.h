@@ -46,6 +46,10 @@ class MetaModel : BasicMetaModel {
 		AgentsOutput agents_output;
 		BenchmarkConfig config;
 
+	protected:
+		virtual void buildCells(const BenchmarkConfig& config) = 0;
+		virtual void buildAgents(const BenchmarkConfig& config) = 0;
+
 	public:
 		MetaModel(
 				std::string lb_algorithm_name, BenchmarkConfig config,
@@ -54,6 +58,8 @@ class MetaModel : BasicMetaModel {
 				fpmas::api::model::LoadBalancing& lb_algorithm,
 				fpmas::scheduler::TimeStep lb_period
 				);
+
+		MetaModel<BaseModel, AgentType>& init();
 
 		void run() {
 			model.runtime().run(config.num_steps);
@@ -100,52 +106,7 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 				MOVE_GROUP, move_behavior
 				);
 
-		std::unique_ptr<UtilityFunction> utility_function;
-		switch(config.utility) {
-			case UNIFORM:
-				utility_function.reset(new UniformUtility);
-				break;
-			case LINEAR:
-				utility_function.reset(new LinearUtility);
-				break;
-			case INVERSE:
-				utility_function.reset(new InverseUtility);
-				break;
-			case STEP:
-				utility_function.reset(new StepUtility);
-				break;
-		}
-		MetaGridCellFactory cell_factory(*utility_function, config.attractors);
-		MooreGrid<MetaGridCell>::Builder grid(
-				cell_factory, config.grid_width, config.grid_height);
-
-		auto local_cells = grid.build(model, {cell_group});
-		dump_grid(config.grid_width, config.grid_height, local_cells);
-
-		fpmas::model::UniformGridAgentMapping mapping(
-				config.grid_width, config.grid_height,
-				config.grid_width * config.grid_height * config.occupation_rate
-				);
-		fpmas::model::GridAgentBuilder<MetaGridCell> agent_builder;
-		fpmas::model::DefaultSpatialAgentFactory<AgentType> agent_factory;
-
-		model.graph().synchronize();
-		agent_builder.build(
-				model,
-				{
-				create_relations_neighbors_group, create_relations_contacts_group,
-				handle_new_contacts_group, move_group
-				},
-				agent_factory, mapping);
-
-		// Static node weights
-		for(auto cell : cell_group.localAgents())
-			cell->node()->setWeight(config.cell_weight);
-		for(auto agent : move_group.localAgents())
-			agent->node()->setWeight(config.agent_weight);
-
-		model.graph().synchronize();
-
+	
 		scheduler.schedule(0, lb_period, lb_probe.job);
 		if(config.agent_interactions == SMALL_WORLD) {
 			scheduler.schedule(
@@ -174,3 +135,35 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 		// JSON agent output
 		scheduler.schedule(last_lb_date + 0.03, agents_output.job());
 }
+
+template<typename BaseModel, typename AgentType>
+MetaModel<BaseModel, AgentType>& MetaModel<BaseModel, AgentType>::init() {
+	buildCells(config);
+	model.graph().synchronize();
+
+	buildAgents(config);
+	// Static node weights
+	for(auto cell : model.getGroup(CELL_GROUP).localAgents())
+		cell->node()->setWeight(config.cell_weight);
+	for(auto agent : model.getGroup(MOVE_GROUP).localAgents())
+		agent->node()->setWeight(config.agent_weight);
+
+	model.graph().synchronize();
+
+	return *this;
+}
+
+class MetaGridModel :
+	public MetaModel<
+		GridModel<fpmas::synchro::GhostMode, MetaGridCell>,
+		MetaGridAgent
+	> {
+		public:
+			using MetaModel<
+				GridModel<fpmas::synchro::GhostMode, MetaGridCell>,
+				MetaGridAgent
+					>::MetaModel;
+
+			void buildCells(const BenchmarkConfig& config) override;
+			void buildAgents(const BenchmarkConfig& config) override;
+};
