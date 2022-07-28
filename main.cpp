@@ -1,17 +1,20 @@
 #include "fpmas.h"
 #include "metamodel.h"
 #include "fpmas/model/spatial/cell_load_balancing.h"
+#include "dot.h"
 
 FPMAS_BASE_DATAPACK_SET_UP(
 		GridCell::JsonBase,
 		MetaGridAgent::JsonBase,
-		MetaGridCell::JsonBase
+		MetaGridCell::JsonBase,
+		MetaGraphCell::JsonBase
 		);
 
 FPMAS_BASE_JSON_SET_UP(
 		GridCell::JsonBase,
 		MetaGridAgent::JsonBase,
-		MetaGridCell::JsonBase
+		MetaGridCell::JsonBase,
+		MetaGraphCell::JsonBase
 		);
 
 using namespace fpmas::synchro;
@@ -20,7 +23,8 @@ int main(int argc, char** argv) {
 	FPMAS_REGISTER_AGENT_TYPES(
 			GridCell::JsonBase,
 			MetaGridAgent::JsonBase,
-			MetaGridCell::JsonBase
+			MetaGridCell::JsonBase,
+			MetaGraphCell::JsonBase
 			);
 	if(argc <= 1) {
 		std::cerr << "[FATAL ERROR] Missing config file argument" << std::endl;
@@ -43,10 +47,12 @@ int main(int argc, char** argv) {
 						{
 							ZoltanLoadBalancing zoltan_lb(
 									fpmas::communication::WORLD, lb_period);
-							MetaGridModel(
+							MetaGridModel model(
 									"zoltan_lb", config,
 									scheduler, runtime, zoltan_lb, lb_period
-									).init().run();
+									);
+							model.init().run();
+							dot::dot_output(model.model.graph());
 						}
 						break;
 					case SCHEDULED_LB:

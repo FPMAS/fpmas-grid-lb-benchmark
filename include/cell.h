@@ -77,6 +77,24 @@ class MetaGridCell :
 		}
 };
 
+class MetaGraphCell :
+	public MetaSpatialCell,
+	public GraphCellBase<MetaGraphCell>,
+	public CellSerialization<MetaGraphCell> {
+	public:
+		// For edge migration optimization purpose only
+		using MetaSpatialCell::MetaSpatialCell;
+
+		// For cell factory
+		MetaGraphCell(float utility)
+			: GraphCellBase<MetaGraphCell>(), MetaSpatialCell(utility) {
+			}
+
+		fpmas::api::model::AgentNode* node() override {
+			return this->GraphCellBase<MetaGraphCell>::node();
+		}
+};
+
 struct UtilityFunction {
 	virtual float utility(Attractor attractor, DiscretePoint point) const = 0;
 
@@ -134,4 +152,3 @@ class MetaGridCellFactory : public fpmas::api::model::GridCellFactory<MetaGridCe
 
 		MetaGridCell* build(DiscretePoint location) override;
 };
-

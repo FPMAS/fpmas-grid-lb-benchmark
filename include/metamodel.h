@@ -167,3 +167,18 @@ class MetaGridModel :
 			void buildCells(const BenchmarkConfig& config) override;
 			void buildAgents(const BenchmarkConfig& config) override;
 };
+
+class MetaGraphModel :
+	public MetaModel<
+		SpatialModel<fpmas::synchro::GhostMode, MetaGraphCell>,
+		MetaGraphAgent
+	> {
+		using MetaModel<
+			SpatialModel<fpmas::synchro::GhostMode, MetaGraphCell>,
+			MetaGraphAgent
+				>::MetaModel;
+
+			void buildCells(const BenchmarkConfig& config) override;
+			void buildAgents(const BenchmarkConfig& config) override;
+	};
+

@@ -20,7 +20,8 @@ add_executable(${PROJECT_NAME}
 	src/probe.cpp
 	src/metamodel.cpp
 	src/config.cpp
-	src/output.cpp)
+	src/output.cpp
+	src/dot.cpp)
 include_directories(include)
 
 target_link_libraries(${PROJECT_NAME} fpmas::fpmas yaml-cpp::yaml-cpp)

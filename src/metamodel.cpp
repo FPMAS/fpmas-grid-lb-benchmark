@@ -42,3 +42,13 @@ void MetaGridModel::buildAgents(const BenchmarkConfig& config) {
 			},
 			agent_factory, mapping);
 }
+
+void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
+	SmallWorldGraphBuilder builder(0.1, 4);
+	SpatialGraphBuilder<MetaGraphCell> graph_builder(builder, 10000);
+
+	graph_builder.build(model);
+}
+
+void MetaGraphModel::buildAgents(const BenchmarkConfig& config) {
+}

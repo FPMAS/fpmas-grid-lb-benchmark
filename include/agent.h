@@ -3,20 +3,69 @@
 #include "fpmas.h"
 #include "cell.h"
 
+template<typename CellType>
 struct MovePolicyFunction {
-	virtual MetaGridCell* selectCell(
-			fpmas::model::Neighbors<MetaGridCell>& mobility_field) const = 0;
+	virtual CellType* selectCell(
+			fpmas::model::Neighbors<CellType>& mobility_field) const = 0;
 };
 
-struct RandomMovePolicy : public MovePolicyFunction {
-	MetaGridCell* selectCell(
-			fpmas::model::Neighbors<MetaGridCell>& mobility_field) const override;
+template<typename CellType>
+struct RandomMovePolicy : public MovePolicyFunction<CellType> {
+	CellType* selectCell(
+			fpmas::model::Neighbors<CellType>& mobility_field) const override;
 };
 
-struct MaxMovePolicy : public MovePolicyFunction {
-	MetaGridCell* selectCell(
-			fpmas::model::Neighbors<MetaGridCell>& mobility_field) const override;
+template<typename CellType>
+struct MaxMovePolicy : public MovePolicyFunction<CellType> {
+	CellType* selectCell(
+			fpmas::model::Neighbors<CellType>& mobility_field) const override;
 };
+
+template<typename CellType>
+CellType* RandomMovePolicy<CellType>::selectCell(
+		fpmas::model::Neighbors<CellType> &mobility_field) const {
+	std::vector<float> utilities;
+	std::vector<CellType*> cells;
+
+	bool null_utilities = true;
+	for(auto cell : mobility_field) {
+		fpmas::model::ReadGuard read(cell);
+		if(cell->getUtility() > 0)
+			null_utilities = false;
+		utilities.push_back(cell->getUtility());
+		cells.push_back(cell);
+	}
+	std::size_t rd_index;
+	if(null_utilities) {
+		fpmas::random::UniformIntDistribution<std::size_t> rd_cell(0, cells.size()-1);
+		rd_index = rd_cell(fpmas::model::RandomNeighbors::rd);
+	} else {
+		fpmas::random::DiscreteDistribution<std::size_t> rd_cell(utilities);
+		rd_index = rd_cell(fpmas::model::RandomNeighbors::rd);
+	}
+	return cells[rd_index];
+}
+
+template<typename CellType>
+CellType* MaxMovePolicy<CellType>::selectCell(
+		fpmas::model::Neighbors<CellType> &mobility_field) const {
+	// Prevents bias when several cells have the max value
+	mobility_field.shuffle();
+
+	std::vector<std::pair<CellType*, float>> cells;
+	for(auto cell : mobility_field) {
+		fpmas::model::ReadGuard read(cell);
+		cells.push_back({cell, cell->getUtility()});
+	}
+	return std::max_element(cells.begin(), cells.end(),
+			[] (
+				const std::pair<CellType*, float>& a1,
+				const std::pair<CellType*, float>& a2
+			   ) {
+			return a1.second < a2.second;
+			}
+			)->first;
+}
 
 class MetaAgentBase {
 	public:
@@ -109,13 +158,15 @@ class MetaAgent : public AgentBase, public MetaAgentBase {
 template<typename AgentBase, typename PerceptionRange>
 void MetaAgent<AgentBase, PerceptionRange>::move() {
 	auto mobility_field = this->mobilityField();
-	MetaGridCell* selected_cell;
+	typename AgentBase::Cell* selected_cell;
 	switch(move_policy) {
 		case RANDOM:
-			selected_cell = RandomMovePolicy().selectCell(mobility_field);
+			selected_cell = RandomMovePolicy<typename AgentBase::Cell>()
+				.selectCell(mobility_field);
 			break;
 		case MAX:
-			selected_cell = MaxMovePolicy().selectCell(mobility_field);
+			selected_cell = MaxMovePolicy<typename AgentBase::Cell>()
+				.selectCell(mobility_field);
 			break;
 	};
 
@@ -260,3 +311,11 @@ class MetaGridAgent :
 				MooreRange<MooreGrid<MetaGridCell>>>::MetaAgent;
 };
 
+class MetaGraphAgent :
+	public MetaAgent<
+		SpatialAgent<MetaGraphAgent, MetaGraphCell>, GraphRange<MetaGraphCell>
+	> {
+		using MetaAgent<
+			SpatialAgent<MetaGraphAgent, MetaGraphCell>, GraphRange<MetaGraphCell>
+			>::MetaAgent;
+	};
