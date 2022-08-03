@@ -1,7 +1,6 @@
 #include "fpmas.h"
 #include "metamodel.h"
 #include "fpmas/model/spatial/cell_load_balancing.h"
-#include "dot.h"
 
 FPMAS_BASE_DATAPACK_SET_UP(
 		GridCell::JsonBase,
@@ -52,7 +51,6 @@ int main(int argc, char** argv) {
 									scheduler, runtime, zoltan_lb, lb_period
 									);
 							model.init().run();
-							dot::dot_output(model.model.graph());
 						}
 						break;
 					case SCHEDULED_LB:
@@ -62,11 +60,12 @@ int main(int argc, char** argv) {
 							ScheduledLoadBalancing scheduled_load_balancing(
 									zoltan_lb, scheduler, runtime
 									);
-							MetaGridModel(
+							MetaGridModel model(
 									"scheduled_lb", config,
 									scheduler, runtime, scheduled_load_balancing,
 									lb_period
-									).init().run();
+									);
+							model.init().run();
 						}
 						break;
 					case GRID_LB:
@@ -75,10 +74,11 @@ int main(int argc, char** argv) {
 									config.grid_width, config.grid_height,
 									fpmas::communication::WORLD
 									);
-							MetaGridModel(
+							MetaGridModel model(
 									"grid_lb", config,
 									scheduler, runtime, grid_lb, lb_period
-									).init().run();
+									);
+							model.init().run();
 						}
 						break;
 					case ZOLTAN_CELL_LB:
@@ -88,20 +88,22 @@ int main(int argc, char** argv) {
 							CellLoadBalancing zoltan_cell_lb(
 									fpmas::communication::WORLD, zoltan_lb
 									);
-							MetaGridModel(
+							MetaGridModel model(
 									"zoltan_cell_lb", config,
 									scheduler, runtime, zoltan_cell_lb, lb_period
-									).init().run();
+									);
+							model.init().run();
 						}
 						break;
 					case RANDOM_LB:
 						{
 
 							RandomLoadBalancing random_lb(fpmas::communication::WORLD);
-							MetaGridModel(
+							MetaGridModel model(
 									"random_lb", config,
 									scheduler, runtime, random_lb, lb_period
-									).init().run();
+									);
+							model.init().run();
 						}
 						break;
 				}

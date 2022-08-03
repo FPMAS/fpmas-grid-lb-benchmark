@@ -52,10 +52,13 @@ namespace dot {
 			else
 				nodes.push_back({node.first, node.second->location()});
 			for(auto edge : node.second->getOutgoingEdges())
-				edges.push_back({
-						edge->getId(), node.first, edge->getTargetNode()->getId(),
-						edge->getLayer()
-						});
+				if(edge->getLayer() == fpmas::api::model::LOCATION ||
+						edge->getLayer() == fpmas::api::model::PERCEPTION ||
+						edge->getLayer() == fpmas::api::model::CELL_SUCCESSOR)
+					edges.push_back({
+							edge->getId(), node.first, edge->getTargetNode()->getId(),
+							edge->getLayer()
+							});
 		}
 
 		fpmas::communication::detail::TypedMpi<
@@ -72,7 +75,7 @@ namespace dot {
 
 		FPMAS_ON_PROC(fpmas::communication::WORLD, 0) {
 			fpmas::io::FileOutput file("graph.dot", graph.getMpiCommunicator().getRank());
-			file.get() << "digraph model {" << std::endl;
+			file.get() << "strict graph model {" << std::endl;
 			file.get() << "overlap=true;size=\"10,10\";K=1;ratio=compress;" << std::endl;
 			file.get() << "node [colorscheme=set19];" << std::endl;
 			file.get() << "edge [colorscheme=dark28,dir=none];" << std::endl;
@@ -81,12 +84,13 @@ namespace dot {
 				file.get() << "n" << node.id.rank() << "_" << node.id.id() << "["
 					<< "fixedsize=true,label=\"\",";
 				if(node.is_located)
+					// Located nodes = cells
 					file.get()
-						<< "height=1.8,width=1.8,"
+						<< "height=.3,width=.3,"
 
 						<< "pos=\"" << node.x*2 << "," << node.y*2 << "!" << "\","
-						<< "shape=box,"
-						<< "style=bold,";
+						<< "shape=diamond,"
+						<< "style=filled,";
 				else
 					file.get()
 						<< "height=.5,width=.5,"
@@ -98,17 +102,21 @@ namespace dot {
 			}
 			for(auto& edge : edges) {
 				file.get()
-					<< "n" << edge.src.rank() << "_" << edge.src.id() << " -> "
+					<< "n" << edge.src.rank() << "_" << edge.src.id() << " -- "
 					<< "n" << edge.tgt.rank() << "_" << edge.tgt.id() << " "
 					<< "[color=" << 6+edge.layer << ",";
 				if(
 						edge.layer == fpmas::api::model::LOCATION ||
-						edge.layer == fpmas::api::model::PERCEPTION)
+						edge.layer == fpmas::api::model::PERCEPTION) {
+					if(edge.layer == fpmas::api::model::LOCATION) {
+						file.get() << "len=0.1,weight=10000,";
+					}
 					file.get()
 						<< "style=bold,";
-				else
+				} else {
 					file.get()
 						<< "style=invis,";
+				}
 				file.get() << "];" << std::endl;
 			}
 
