@@ -104,7 +104,7 @@ class MetaAgent : public AgentBase, public MetaAgentBase {
 
 		/**
 		 * Adds `agent` to the contact list (at the end of the queue) and links
-		 * is as an outgoing neighbor of this agent on the CONTACT layer.
+		 * in as an outgoing neighbor of this agent on the CONTACT layer.
 		 */
 		void add_to_contacts(fpmas::api::model::Agent* agent);
 
@@ -154,24 +154,6 @@ class MetaAgent : public AgentBase, public MetaAgentBase {
 			return this->AgentBase::node();
 		}
 };
-
-template<typename AgentBase, typename PerceptionRange>
-void MetaAgent<AgentBase, PerceptionRange>::move() {
-	auto mobility_field = this->mobilityField();
-	typename AgentBase::Cell* selected_cell;
-	switch(move_policy) {
-		case RANDOM:
-			selected_cell = RandomMovePolicy<typename AgentBase::Cell>()
-				.selectCell(mobility_field);
-			break;
-		case MAX:
-			selected_cell = MaxMovePolicy<typename AgentBase::Cell>()
-				.selectCell(mobility_field);
-			break;
-	};
-
-	this->moveTo(selected_cell);
-}
 
 template<typename AgentBase, typename PerceptionRange>
 void MetaAgent<AgentBase, PerceptionRange>::add_to_contacts(fpmas::api::model::Agent* agent) {
@@ -259,6 +241,24 @@ void MetaAgent<AgentBase, PerceptionRange>::handle_new_contacts() {
 		// Unlinks temporary NEW_CONTACT edge
 		this->model()->unlink(new_contact.edge());
 	}
+}
+
+template<typename AgentBase, typename PerceptionRange>
+void MetaAgent<AgentBase, PerceptionRange>::move() {
+	auto mobility_field = this->mobilityField();
+	typename AgentBase::Cell* selected_cell;
+	switch(move_policy) {
+		case RANDOM:
+			selected_cell = RandomMovePolicy<typename AgentBase::Cell>()
+				.selectCell(mobility_field);
+			break;
+		case MAX:
+			selected_cell = MaxMovePolicy<typename AgentBase::Cell>()
+				.selectCell(mobility_field);
+			break;
+	};
+
+	this->moveTo(selected_cell);
 }
 
 template<typename AgentType>

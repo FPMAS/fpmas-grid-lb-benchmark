@@ -1,4 +1,5 @@
 #include "metamodel.h"
+#include "fpmas/model/spatial/graph_builder.h"
 
 void MetaGridModel::buildCells(const BenchmarkConfig& config) {
 	std::unique_ptr<UtilityFunction> utility_function;

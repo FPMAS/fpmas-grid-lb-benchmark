@@ -13,8 +13,7 @@ FetchContent_Declare(
 	)
 FetchContent_MakeAvailable(yaml-cpp)
 
-add_executable(${PROJECT_NAME}
-	main.cpp
+add_library(fpmas-metamodel-lib
 	src/agent.cpp
 	src/cell.cpp
 	src/probe.cpp
@@ -24,5 +23,9 @@ add_executable(${PROJECT_NAME}
 	src/dot.cpp)
 include_directories(include)
 
-target_link_libraries(${PROJECT_NAME} fpmas::fpmas yaml-cpp::yaml-cpp)
+add_executable(fpmas-metamodel main.cpp)
 
+target_link_libraries(fpmas-metamodel-lib fpmas::fpmas yaml-cpp::yaml-cpp)
+target_link_libraries(fpmas-metamodel fpmas-metamodel-lib)
+
+add_subdirectory(tests)
