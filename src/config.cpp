@@ -10,8 +10,19 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 	try {
 		YAML::Node config = YAML::LoadFile(config_file);
 
-		LOAD_YAML_CONFIG_0(grid_width, unsigned int);
-		LOAD_YAML_CONFIG_0(grid_height, unsigned int);
+		LOAD_YAML_CONFIG_0(environment, Environment);
+		switch(this->environment) {
+			case Environment::GRID:
+				LOAD_YAML_CONFIG_0(grid_width, unsigned int);
+				LOAD_YAML_CONFIG_0(grid_height, unsigned int);
+				break;
+			case Environment::GRAPH:
+				LOAD_YAML_CONFIG_0(graph_type, GraphType);
+				LOAD_YAML_CONFIG_0(num_cells, unsigned int);
+				LOAD_YAML_CONFIG_0(output_degree, unsigned int);
+				break;
+		}
+
 		LOAD_YAML_CONFIG_0(occupation_rate, float);
 		LOAD_YAML_CONFIG_0(num_steps, fpmas::api::scheduler::TimeStep);
 		LOAD_YAML_CONFIG_0(utility, Utility);
@@ -33,15 +44,69 @@ BenchmarkConfig::BenchmarkConfig(std::string config_file) {
 }
 
 namespace YAML {
+	Node convert<Environment>::encode(const Environment& environment) {
+		switch(environment) {
+			case Environment::GRID:
+				return Node("GRID");
+			case Environment::GRAPH:
+				return Node("GRAPH");
+			default:
+				return Node();
+		}
+	}
+
+	bool convert<Environment>::decode(const Node &node, Environment& environment) {
+		std::string str = node.as<std::string>();
+		if(str == "GRID") {
+			environment = Environment::GRID;
+			return true;
+		}
+		if(str == "GRAPH") {
+			environment = Environment::GRAPH;
+			return true;
+		}
+		return false;
+	}
+
+	Node convert<GraphType>::encode(const GraphType& graph_type) {
+		switch(graph_type) {
+			case GraphType::RANDOM:
+				return Node("RANDOM");
+			case GraphType::CLUSTERED:
+				return Node("CLUSTERED");
+			case GraphType::SMALL_WORLD:
+				return Node("SMALL_WORLD");
+			default:
+				return Node();
+		}
+	}
+
+	bool convert<GraphType>::decode(const Node &node, GraphType& graph_type) {
+		std::string str = node.as<std::string>();
+		if(str == "RANDOM") {
+			graph_type = GraphType::RANDOM;
+			return true;
+		}
+		if(str == "CLUSTERED") {
+			graph_type = GraphType::CLUSTERED;
+			return true;
+		}
+		if(str == "SMALL_WORLD") {
+			graph_type = GraphType::SMALL_WORLD;
+			return true;
+		}
+		return false;
+	}
+
 	Node convert<Utility>::encode(const Utility& utility) {
 		switch(utility) {
-			case UNIFORM:
+			case Utility::UNIFORM:
 				return Node("UNIFORM");
-			case LINEAR:
+			case Utility::LINEAR:
 				return Node("LINEAR");
-			case INVERSE:
+			case Utility::INVERSE:
 				return Node("INVERSE");
-			case STEP:
+			case Utility::STEP:
 				return Node("STEP");
 			default:
 				return Node();
@@ -51,19 +116,19 @@ namespace YAML {
 	bool convert<Utility>::decode(const Node &node, Utility& utility) {
 		std::string str = node.as<std::string>();
 		if(str == "UNIFORM") {
-			utility = UNIFORM;
+			utility = Utility::UNIFORM;
 			return true;
 		}
 		if(str == "LINEAR") {
-			utility = LINEAR;
+			utility = Utility::LINEAR;
 			return true;
 		}
 		if(str == "INVERSE") {
-			utility = INVERSE;
+			utility = Utility::INVERSE;
 			return true;
 		}
 		if(str == "STEP") {
-			utility = STEP;
+			utility = Utility::STEP;
 			return true;
 		}
 		return false;
@@ -71,9 +136,9 @@ namespace YAML {
 
 	Node convert<MovePolicy>::encode(const MovePolicy& move_policy) {
 		switch(move_policy) {
-			case RANDOM:
+			case MovePolicy::RANDOM:
 				return Node("RANDOM");
-			case MAX:
+			case MovePolicy::MAX:
 				return Node("MAX");
 			default:
 				return Node();
@@ -83,11 +148,11 @@ namespace YAML {
 	bool convert<MovePolicy>::decode(const Node &node, MovePolicy& move_policy) {
 		std::string str = node.as<std::string>();
 		if(str == "RANDOM") {
-			move_policy = RANDOM;
+			move_policy = MovePolicy::RANDOM;
 			return true;
 		}
 		if(str == "MAX") {
-			move_policy = MAX;
+			move_policy = MovePolicy::MAX;
 			return true;
 		}
 		return false;
@@ -95,15 +160,15 @@ namespace YAML {
 
 	Node convert<LbAlgorithm>::encode(const LbAlgorithm& lb_algorithm) {
 		switch(lb_algorithm) {
-			case SCHEDULED_LB:
+			case LbAlgorithm::SCHEDULED_LB:
 				return Node("SCHEDULED_LB");
-			case ZOLTAN_LB:
+			case LbAlgorithm::ZOLTAN_LB:
 				return Node("ZOLTAN_LB");
-			case GRID_LB:
+			case LbAlgorithm::GRID_LB:
 				return Node("GRID_LB");
-			case ZOLTAN_CELL_LB:
+			case LbAlgorithm::ZOLTAN_CELL_LB:
 				return Node("ZOLTAN_CELL_LB");
-			case RANDOM_LB:
+			case LbAlgorithm::RANDOM_LB:
 				return Node("RANDOM_LB");
 			default:
 				return Node();
@@ -113,23 +178,23 @@ namespace YAML {
 	bool convert<LbAlgorithm>::decode(const Node &node, LbAlgorithm& lb_algorithm) {
 		std::string str = node.as<std::string>();
 		if(str == "SCHEDULED_LB") {
-			lb_algorithm = SCHEDULED_LB;
+			lb_algorithm = LbAlgorithm::SCHEDULED_LB;
 			return true;
 		}
 		if(str == "ZOLTAN_LB") {
-			lb_algorithm = ZOLTAN_LB;
+			lb_algorithm = LbAlgorithm::ZOLTAN_LB;
 			return true;
 		}
 		if(str == "GRID_LB") {
-			lb_algorithm = GRID_LB;
+			lb_algorithm = LbAlgorithm::GRID_LB;
 			return true;
 		}
 		if(str == "ZOLTAN_CELL_LB") {
-			lb_algorithm = ZOLTAN_CELL_LB;
+			lb_algorithm = LbAlgorithm::ZOLTAN_CELL_LB;
 			return true;
 		}
 		if(str == "RANDOM_LB") {
-			lb_algorithm = RANDOM_LB;
+			lb_algorithm = LbAlgorithm::RANDOM_LB;
 			return true;
 		}
 		return false;
@@ -138,10 +203,10 @@ namespace YAML {
 	Node convert<AgentInteractions>::encode(
 			const AgentInteractions& agent_interactions) {
 		switch(agent_interactions) {
-			case LOCAL:
+			case AgentInteractions::LOCAL:
 				return Node("LOCAL");
-			case SMALL_WORLD:
-				return Node("SMALL_WORLD");
+			case AgentInteractions::CONTACTS:
+				return Node("CONTACTS");
 			default:
 				return Node();
 		}
@@ -152,11 +217,11 @@ namespace YAML {
 			AgentInteractions &agent_interactions) {
 		std::string str = node.as<std::string>();
 		if(str == "LOCAL") {
-			agent_interactions = LOCAL;
+			agent_interactions = AgentInteractions::LOCAL;
 			return true;
 		}
-		if(str == "SMALL_WORLD") {
-			agent_interactions = SMALL_WORLD;
+		if(str == "CONTACTS") {
+			agent_interactions = AgentInteractions::CONTACTS;
 			return true;
 		}
 		return false;

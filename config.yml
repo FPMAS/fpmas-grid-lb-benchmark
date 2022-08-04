@@ -1,6 +1,13 @@
-# Grid size
+# Grid environment
+environment: GRID
 grid_width: 100
 grid_height: 100
+
+# Graph environment
+#environment: GRAPH
+#graph_type: SMALL_WORLD
+#num_cells: 1000
+#output_degree: 6
 
 # Used to compute the agent count
 occupation_rate: 0.5

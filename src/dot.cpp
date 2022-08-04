@@ -1,4 +1,5 @@
 #include "dot.h"
+#include "config.h"
 #include <fpmas/communication/communication.h>
 #include <fpmas/utils/macros.h>
 #include <fpmas/utils/functional.h>
@@ -54,7 +55,8 @@ namespace dot {
 			for(auto edge : node.second->getOutgoingEdges())
 				if(edge->getLayer() == fpmas::api::model::LOCATION ||
 						edge->getLayer() == fpmas::api::model::PERCEPTION ||
-						edge->getLayer() == fpmas::api::model::CELL_SUCCESSOR)
+						edge->getLayer() == fpmas::api::model::CELL_SUCCESSOR ||
+						edge->getLayer() == CONTACT)
 					edges.push_back({
 							edge->getId(), node.first, edge->getTargetNode()->getId(),
 							edge->getLayer()
@@ -76,9 +78,9 @@ namespace dot {
 		FPMAS_ON_PROC(fpmas::communication::WORLD, 0) {
 			fpmas::io::FileOutput file("graph.dot", graph.getMpiCommunicator().getRank());
 			file.get() << "strict graph model {" << std::endl;
-			file.get() << "overlap=true;size=\"10,10\";K=1;ratio=compress;" << std::endl;
+			file.get() << "overlap=true;size=\"10,10\";K=1;ratio=compress;outputorder=edgesfirst;" << std::endl;
 			file.get() << "node [colorscheme=set19];" << std::endl;
-			file.get() << "edge [colorscheme=dark28,dir=none];" << std::endl;
+			file.get() << "edge [colorscheme=set39,dir=none];" << std::endl;
 
 			for(auto& node : nodes) {
 				file.get() << "n" << node.id.rank() << "_" << node.id.id() << "["
@@ -107,7 +109,8 @@ namespace dot {
 					<< "[color=" << 6+edge.layer << ",";
 				if(
 						edge.layer == fpmas::api::model::LOCATION ||
-						edge.layer == fpmas::api::model::PERCEPTION) {
+						edge.layer == fpmas::api::model::PERCEPTION ||
+						edge.layer == CONTACT) {
 					if(edge.layer == fpmas::api::model::LOCATION) {
 						file.get() << "len=0.1,weight=10000,";
 					}
@@ -115,7 +118,7 @@ namespace dot {
 						<< "style=bold,";
 				} else {
 					file.get()
-						<< "style=invis,";
+						<< "style=solid,";
 				}
 				file.get() << "];" << std::endl;
 			}

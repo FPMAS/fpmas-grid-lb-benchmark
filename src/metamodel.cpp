@@ -1,19 +1,20 @@
 #include "metamodel.h"
 #include "fpmas/model/spatial/graph_builder.h"
+#include <fpmas/random/distribution.h>
 
 void MetaGridModel::buildCells(const BenchmarkConfig& config) {
 	std::unique_ptr<UtilityFunction> utility_function;
 	switch(config.utility) {
-		case UNIFORM:
+		case Utility::UNIFORM:
 			utility_function.reset(new UniformUtility);
 			break;
-		case LINEAR:
+		case Utility::LINEAR:
 			utility_function.reset(new LinearUtility);
 			break;
-		case INVERSE:
+		case Utility::INVERSE:
 			utility_function.reset(new InverseUtility);
 			break;
-		case STEP:
+		case Utility::STEP:
 			utility_function.reset(new StepUtility);
 			break;
 	}
@@ -45,10 +46,22 @@ void MetaGridModel::buildAgents(const BenchmarkConfig& config) {
 }
 
 void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
-	SmallWorldGraphBuilder builder(0.1, 4);
-	SpatialGraphBuilder<MetaGraphCell> graph_builder(builder, 10000);
-
+	fpmas::random::PoissonDistribution<std::size_t> edge_dist(config.output_degree);
+	fpmas::api::graph::DistributedGraphBuilder<fpmas::model::AgentPtr>* builder;
+	switch(config.graph_type) {
+		case GraphType::RANDOM:
+			builder = new DistributedUniformGraphBuilder(edge_dist);
+			break;
+		case GraphType::CLUSTERED:
+			builder = new DistributedClusteredGraphBuilder(edge_dist);
+			break;
+		case GraphType::SMALL_WORLD:
+			builder = new SmallWorldGraphBuilder(0.1, config.output_degree);
+			break;
+	}
+	SpatialGraphBuilder<MetaGraphCell> graph_builder(*builder, config.num_cells);
 	graph_builder.build(model);
+	delete builder;
 }
 
 void MetaGraphModel::buildAgents(const BenchmarkConfig& config) {

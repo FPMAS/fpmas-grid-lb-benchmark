@@ -248,11 +248,11 @@ void MetaAgent<AgentBase, PerceptionRange>::move() {
 	auto mobility_field = this->mobilityField();
 	typename AgentBase::Cell* selected_cell;
 	switch(move_policy) {
-		case RANDOM:
+		case MovePolicy::RANDOM:
 			selected_cell = RandomMovePolicy<typename AgentBase::Cell>()
 				.selectCell(mobility_field);
 			break;
-		case MAX:
+		case MovePolicy::MAX:
 			selected_cell = MaxMovePolicy<typename AgentBase::Cell>()
 				.selectCell(mobility_field);
 			break;

@@ -15,20 +15,28 @@ FPMAS_DEFINE_GROUPS(
 
 FPMAS_DEFINE_LAYERS(CONTACT, NEW_CONTACT);
 
-enum Utility {
+enum class Environment {
+	GRID, GRAPH
+};
+
+enum class GraphType {
+	RANDOM, CLUSTERED, SMALL_WORLD
+};
+
+enum class Utility {
 	UNIFORM, LINEAR, INVERSE, STEP
 };
 
-enum MovePolicy {
+enum class MovePolicy {
 	RANDOM, MAX
 };
 
-enum LbAlgorithm {
+enum class LbAlgorithm {
 	SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, RANDOM_LB
 };
 
-enum AgentInteractions {
-	LOCAL, SMALL_WORLD
+enum class AgentInteractions {
+	LOCAL, CONTACTS
 };
 
 struct Attractor {
@@ -45,6 +53,10 @@ class BenchmarkConfig {
 	public:
 		bool is_valid = true;
 
+		Environment environment;
+		GraphType graph_type;
+		std::size_t num_cells;
+		std::size_t output_degree;
 		std::size_t grid_width;
 		std::size_t grid_height;
 		float occupation_rate;
@@ -87,6 +99,18 @@ class BenchmarkConfig {
 };
 
 namespace YAML {
+	template<>
+		struct convert<Environment> {
+			static Node encode(const Environment& rhs);
+			static bool decode(const Node& node, Environment& rhs);
+		};
+
+	template<>
+		struct convert<GraphType> {
+			static Node encode(const GraphType& graph_type);
+			static bool decode(const Node& node, GraphType& graph_type);
+		};
+
 	template<>
 		struct convert<Utility> {
 			static Node encode(const Utility& rhs);

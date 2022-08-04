@@ -8,10 +8,16 @@ class BasicMetaModel {
 		virtual std::string getLoadBalancingAlgorithmeName() const = 0;
 		virtual LoadBalancingProbe& getLoadBalancingProbe() = 0;
 		virtual fpmas::api::model::Model& getModel() = 0;
+
+		virtual BasicMetaModel* init() = 0;
+		virtual void run() = 0;
+
+		virtual ~BasicMetaModel() {
+		}
 };
 
 template<typename BaseModel, typename AgentType>
-class MetaModel : BasicMetaModel {
+class MetaModel : public BasicMetaModel {
 	private:
 		Behavior<MetaGridCell> cell_behavior {
 			&MetaGridCell::update_edge_weights
@@ -59,9 +65,9 @@ class MetaModel : BasicMetaModel {
 				fpmas::scheduler::TimeStep lb_period
 				);
 
-		MetaModel<BaseModel, AgentType>& init();
+		MetaModel<BaseModel, AgentType>* init() override;
 
-		void run() {
+		void run() override {
 			model.runtime().run(config.num_steps);
 		}
 
@@ -108,7 +114,7 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 
 	
 		scheduler.schedule(0, lb_period, lb_probe.job);
-		if(config.agent_interactions == SMALL_WORLD) {
+		if(config.agent_interactions == AgentInteractions::CONTACTS) {
 			scheduler.schedule(
 					0.20, config.refresh_local_contacts,
 					create_relations_neighbors_group.jobs()
@@ -137,7 +143,7 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 }
 
 template<typename BaseModel, typename AgentType>
-MetaModel<BaseModel, AgentType>& MetaModel<BaseModel, AgentType>::init() {
+MetaModel<BaseModel, AgentType>* MetaModel<BaseModel, AgentType>::init() {
 	buildCells(config);
 	model.graph().synchronize();
 
@@ -150,7 +156,7 @@ MetaModel<BaseModel, AgentType>& MetaModel<BaseModel, AgentType>::init() {
 
 	model.graph().synchronize();
 
-	return *this;
+	return this;
 }
 
 class MetaGridModel :
@@ -180,5 +186,34 @@ class MetaGraphModel :
 
 			void buildCells(const BenchmarkConfig& config) override;
 			void buildAgents(const BenchmarkConfig& config) override;
+	};
+
+struct BasicMetaModelFactory {
+	virtual BasicMetaModel* build(
+			std::string lb_algorithm_name, BenchmarkConfig config,
+			fpmas::api::scheduler::Scheduler& scheduler,
+			fpmas::api::runtime::Runtime& runtime,
+			fpmas::api::model::LoadBalancing& lb_algorithm,
+			fpmas::scheduler::TimeStep lb_period
+			) = 0;
+
+	virtual ~BasicMetaModelFactory() {
+	}
+};
+
+template<typename MetaModelType>
+	struct MetaModelFactory : public BasicMetaModelFactory {
+		MetaModelType* build(
+				std::string lb_algorithm_name, BenchmarkConfig config,
+				fpmas::api::scheduler::Scheduler& scheduler,
+				fpmas::api::runtime::Runtime& runtime,
+				fpmas::api::model::LoadBalancing& lb_algorithm,
+				fpmas::scheduler::TimeStep lb_period
+				) override {
+			return new MetaModelType(
+					lb_algorithm_name, config, scheduler, runtime,
+					lb_algorithm, lb_period
+					);
+		}
 	};
 
