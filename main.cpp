@@ -5,16 +5,20 @@
 
 FPMAS_BASE_DATAPACK_SET_UP(
 		GridCell::JsonBase,
+		GraphCell::JsonBase,
 		MetaGridAgent::JsonBase,
 		MetaGridCell::JsonBase,
-		MetaGraphCell::JsonBase
+		MetaGraphCell::JsonBase,
+		MetaGraphAgent::JsonBase
 		);
 
 FPMAS_BASE_JSON_SET_UP(
 		GridCell::JsonBase,
+		GraphCell::JsonBase,
 		MetaGridAgent::JsonBase,
 		MetaGridCell::JsonBase,
-		MetaGraphCell::JsonBase
+		MetaGraphCell::JsonBase,
+		MetaGraphAgent::JsonBase
 		);
 
 using namespace fpmas::synchro;
@@ -22,9 +26,11 @@ using namespace fpmas::synchro;
 int main(int argc, char** argv) {
 	FPMAS_REGISTER_AGENT_TYPES(
 			GridCell::JsonBase,
+			GraphCell::JsonBase,
 			MetaGridAgent::JsonBase,
 			MetaGridCell::JsonBase,
-			MetaGraphCell::JsonBase
+			MetaGraphCell::JsonBase,
+			MetaGraphAgent::JsonBase
 			);
 	if(argc <= 1) {
 		std::cerr << "[FATAL ERROR] Missing config file argument" << std::endl;
@@ -62,7 +68,6 @@ int main(int argc, char** argv) {
 									scheduler, runtime, zoltan_lb, lb_period
 									);
 							model->init()->run();
-							dot::dot_output(model->getModel().graph());
 							delete model;
 						}
 						break;

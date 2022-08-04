@@ -1,30 +1,35 @@
 #include "fpmas/api/model/model.h"
 #include "fpmas/io/output.h"
+#include "metamodel.h"
 
 namespace dot {
 
-	void dot_output(const fpmas::api::model::AgentGraph& graph);
+	void dot_output(BasicMetaModel& meta_model);
 
 	class NodeView {
 		public:
 			DistributedId id;
-			int location;
+			int rank;
 			int x;
 			int y;
-			bool is_located;
+			bool is_location;
+			bool fixed_position;
 		private:
-			NodeView(DistributedId id, int location, bool is_located, int x, int y)
-				: id(id), location(location), is_located(is_located), x(x), y(y) {
+			NodeView(
+					DistributedId id, int rank, bool is_location,
+					bool fixed_position, int x, int y) :
+				id(id), rank(rank), is_location(is_location),
+				fixed_position(fixed_position), x(x), y(y) {
 				}
 
 		public:
 			NodeView() = default;
 
-			NodeView(DistributedId id, int location)
-				: NodeView(id, location, false, {}, {}) {
+			NodeView(DistributedId id, int rank, bool is_location)
+				: NodeView(id, rank, is_location, false, {}, {}) {
 				}
-			NodeView(DistributedId id, int location, int x, int y)
-				: NodeView(id, location, true, x, y) {
+			NodeView(DistributedId id, int rank, bool is_location, int x, int y)
+				: NodeView(id, rank, is_location, true, x, y) {
 				}
 	};
 

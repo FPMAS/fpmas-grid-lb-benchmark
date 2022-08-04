@@ -1,5 +1,6 @@
 #include "metamodel.h"
 #include "fpmas/model/spatial/graph_builder.h"
+#include <fpmas/model/spatial/spatial_model.h>
 #include <fpmas/random/distribution.h>
 
 void MetaGridModel::buildCells(const BenchmarkConfig& config) {
@@ -65,4 +66,20 @@ void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
 }
 
 void MetaGraphModel::buildAgents(const BenchmarkConfig& config) {
+	fpmas::model::UniformAgentMapping mapping(
+			this->getModel().getMpiCommunicator(),
+			this->cellGroup(),
+			config.num_cells * config.occupation_rate
+			);
+	fpmas::model::SpatialAgentBuilder<MetaGraphCell> agent_builder;
+	fpmas::model::DefaultSpatialAgentFactory<MetaGraphAgent> agent_factory;
+	agent_builder.build(
+			model,
+			{
+			model.getGroup(RELATIONS_FROM_NEIGHBORS_GROUP),
+			model.getGroup(RELATIONS_FROM_CONTACTS_GROUP),
+			model.getGroup(HANDLE_NEW_CONTACTS_GROUP),
+			model.getGroup(MOVE_GROUP)
+			},
+			agent_factory, mapping);
 }

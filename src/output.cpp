@@ -66,7 +66,7 @@ AgentsOutput::AgentsOutput(
 				switch(agent->node()->state()) {
 					case fpmas::api::graph::LOCAL:
 						local_agents.emplace_back(
-								dynamic_cast<const MetaGridAgent*>(agent)
+								dynamic_cast<const MetaAgentBase*>(agent)
 								);
 					break;
 					case fpmas::api::graph::DISTANT:

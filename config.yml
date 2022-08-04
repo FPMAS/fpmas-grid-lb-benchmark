@@ -41,7 +41,7 @@ MetaAgentBase:
   # Max contacts count
   max_contacts: 10
 
-# If CLUSTERED, defines a list of attractors.
+# If utility is not UNIFORM, defines a list of attractors.
 # An attractor is defined as [[x, y], radius]
 attractors: 
   - [[20, 20], 100]

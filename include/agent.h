@@ -314,7 +314,8 @@ class MetaGridAgent :
 class MetaGraphAgent :
 	public MetaAgent<
 		SpatialAgent<MetaGraphAgent, MetaGraphCell>, GraphRange<MetaGraphCell>
-	> {
+	>,
+	public MetaAgentSerialization<MetaGraphAgent> {
 		using MetaAgent<
 			SpatialAgent<MetaGraphAgent, MetaGraphCell>, GraphRange<MetaGraphCell>
 			>::MetaAgent;

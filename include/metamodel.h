@@ -8,6 +8,8 @@ class BasicMetaModel {
 		virtual std::string getLoadBalancingAlgorithmeName() const = 0;
 		virtual LoadBalancingProbe& getLoadBalancingProbe() = 0;
 		virtual fpmas::api::model::Model& getModel() = 0;
+		virtual fpmas::api::model::AgentGroup& cellGroup() = 0;
+		virtual fpmas::api::model::AgentGroup& agentGroup() = 0;
 
 		virtual BasicMetaModel* init() = 0;
 		virtual void run() = 0;
@@ -81,6 +83,14 @@ class MetaModel : public BasicMetaModel {
 
 		fpmas::api::model::Model& getModel() override {
 			return model;
+		}
+
+		fpmas::api::model::AgentGroup& cellGroup() override {
+			return model.cellGroup();
+		}
+
+		fpmas::api::model::AgentGroup& agentGroup() override {
+			return model.getGroup(MOVE_GROUP);
 		}
 };
 
