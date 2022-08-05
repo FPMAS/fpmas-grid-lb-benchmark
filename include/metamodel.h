@@ -1,6 +1,7 @@
 #pragma once
 
 #include "output.h"
+#include "dot.h"
 #include "probe.h"
 
 class BasicMetaModel {
@@ -52,6 +53,7 @@ class MetaModel : public BasicMetaModel {
 		LoadBalancingCsvOutput csv_output;
 		CellsOutput cells_output;
 		AgentsOutput agents_output;
+		DotOutput dot_output;
 		BenchmarkConfig config;
 
 	protected:
@@ -90,7 +92,7 @@ class MetaModel : public BasicMetaModel {
 		}
 
 		fpmas::api::model::AgentGroup& agentGroup() override {
-			return model.getGroup(MOVE_GROUP);
+			return model.getGroup(AGENT_GROUP);
 		}
 };
 
@@ -105,8 +107,9 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 	lb_algorithm_name(lb_algorithm_name + "-" + std::to_string(lb_period)),
 	model(scheduler, runtime, lb_algorithm),
 	lb_probe(model.graph(), lb_algorithm), csv_output(*this),
-	cells_output(model, this->lb_algorithm_name, config.grid_width, config.grid_height),
-	agents_output(model, this->lb_algorithm_name, config.grid_width, config.grid_height),
+	cells_output(*this, this->lb_algorithm_name, config.grid_width, config.grid_height),
+	agents_output(*this, this->lb_algorithm_name, config.grid_width, config.grid_height),
+	dot_output(*this, this->lb_algorithm_name),
 	config(config) {
 		auto& cell_group = model.buildGroup(CELL_GROUP, cell_behavior);
 		auto& create_relations_neighbors_group = model.buildGroup(
@@ -146,10 +149,13 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 			= ((config.num_steps-1) / lb_period) * lb_period;
 		// Clears distant nodes
 		scheduler.schedule(last_lb_date + 0.01, sync_graph);
-		// JSON cell output
-		scheduler.schedule(last_lb_date + 0.02, cells_output.job());
+		if(config.environment == Environment::GRID)
+			// JSON cell output
+			scheduler.schedule(last_lb_date + 0.02, cells_output.job());
 		// JSON agent output
 		scheduler.schedule(last_lb_date + 0.03, agents_output.job());
+		// Dot output
+		scheduler.schedule(last_lb_date + 0.04, dot_output.job());
 }
 
 template<typename BaseModel, typename AgentType>
@@ -161,7 +167,7 @@ MetaModel<BaseModel, AgentType>* MetaModel<BaseModel, AgentType>::init() {
 	// Static node weights
 	for(auto cell : model.getGroup(CELL_GROUP).localAgents())
 		cell->node()->setWeight(config.cell_weight);
-	for(auto agent : model.getGroup(MOVE_GROUP).localAgents())
+	for(auto agent : model.getGroup(AGENT_GROUP).localAgents())
 		agent->node()->setWeight(config.agent_weight);
 
 	model.graph().synchronize();

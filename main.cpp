@@ -1,7 +1,6 @@
 #include "fpmas.h"
 #include "metamodel.h"
 #include "fpmas/model/spatial/cell_load_balancing.h"
-#include "dot.h"
 
 FPMAS_BASE_DATAPACK_SET_UP(
 		GridCell::JsonBase,

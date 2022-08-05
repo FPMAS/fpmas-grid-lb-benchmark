@@ -1,30 +1,5 @@
 #include "metamodel.h"
 
-MetaAgentView::MetaAgentView(const MetaAgentBase* agent) :
-	id(agent->node()->getId()),
-	contacts(agent->contacts()) {
-		for(auto perception : agent->node()->getOutgoingEdges(fpmas::api::model::PERCEPTION))
-			perceptions.push_back(perception->getTargetNode()->getId());
-	}
-
-MetaGridAgentView::MetaGridAgentView(const MetaGridAgent* agent)
-	: MetaAgentView(agent), location(agent->locationPoint()) {
-	}
-
-DistantAgentView::DistantAgentView(const fpmas::api::model::Agent* agent) :
-	id(agent->node()->getId()),
-	rank(agent->node()->location()) {
-	}
-
-AgentsOutputView::AgentsOutputView(
-		int rank, std::size_t grid_width, std::size_t grid_height,
-		std::vector<MetaAgentView> agents,
-		std::vector<DistantAgentView> distant_agents
-		) :
-	rank(rank), grid_width(grid_width), grid_height(grid_height),
-	agents(agents), distant_agents(distant_agents) {
-}
-
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,
 		std::vector<MetaGridCell*> local_cells) {
@@ -52,41 +27,6 @@ void dump_grid(
 	}
 }
 
-AgentsOutput::AgentsOutput(
-		fpmas::api::model::Model& model,
-		std::string lb_algorithm,
-		std::size_t grid_width, std::size_t grid_height
-		) :
-	fpmas::io::JsonOutput<AgentsOutputView>(
-			output_file, [this, &model, grid_width, grid_height] () {
-
-			std::vector<MetaAgentView> local_agents;
-			std::vector<DistantAgentView> distant_agents;
-			for(auto agent : this->model.getGroup(AGENT_GROUP).agents())
-				switch(agent->node()->state()) {
-					case fpmas::api::graph::LOCAL:
-						local_agents.emplace_back(
-								dynamic_cast<const MetaAgentBase*>(agent)
-								);
-					break;
-					case fpmas::api::graph::DISTANT:
-						distant_agents.emplace_back(agent);
-					break;
-				}
-			return AgentsOutputView(
-					model.getMpiCommunicator().getRank(),
-					grid_width, grid_height, local_agents, distant_agents
-					);
-			}
-			),
-	output_file(
-			lb_algorithm + "_agents.%r.%t.json",
-			model.getMpiCommunicator(), model.runtime()
-			),
-	model(model), grid_width(grid_width), grid_height(grid_height) {
-	}
-
-
 LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
 	:
 		fpmas::io::FileOutput(
@@ -109,27 +49,38 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
 			}},
 			{"AGENTS", [&metamodel] {
 			float total_weight = 0;
-			for(auto agent : metamodel.getModel().getGroup(AGENT_GROUP).localAgents())
+			for(auto agent : metamodel.agentGroup().localAgents())
 				total_weight += agent->node()->getWeight();
 			return total_weight;
 			}},
 			{"CELLS", [&metamodel] {
 			float total_weight = 0;
-			for(auto agent : metamodel.getModel().getGroup(CELL_GROUP).localAgents())
+			for(auto agent : metamodel.cellGroup().localAgents())
 				total_weight += agent->node()->getWeight();
 			return total_weight;
 			}},
 			{"DISTANT_AGENT_EDGES", [&metamodel] {
 			float total_weight = 0;
-			for(auto agent : metamodel.getModel().getGroup(AGENT_GROUP).localAgents())
+			for(auto agent : metamodel.agentGroup().localAgents()) {
 				for(auto edge : agent->node()->getOutgoingEdges())
-					if(edge->state() == fpmas::api::graph::DISTANT)
+					if(edge->state() == fpmas::api::graph::DISTANT
+							&& dynamic_cast<MetaAgentBase*>(edge->getTargetNode()->data().get()))
+						total_weight+=edge->getWeight();
+			}
+			return total_weight;
+			}},
+			{"DISTANT_AGENT_CELL_EDGES", [&metamodel] {
+			float total_weight = 0;
+			for(auto agent : metamodel.agentGroup().localAgents())
+				for(auto edge : agent->node()->getOutgoingEdges())
+					if(edge->state() == fpmas::api::graph::DISTANT
+							&& dynamic_cast<MetaCell*>(edge->getTargetNode()->data().get()))
 						total_weight+=edge->getWeight();
 			return total_weight;
 			}},
 			{"DISTANT_CELL_EDGES", [&metamodel] {
 			float total_weight = 0;
-			for(auto cell : metamodel.getModel().getGroup(CELL_GROUP).localAgents())
+			for(auto cell : metamodel.cellGroup().localAgents())
 				for(auto edge : cell->node()->getOutgoingEdges())
 					if(edge->state() == fpmas::api::graph::DISTANT)
 						total_weight+=edge->getWeight();
@@ -138,10 +89,22 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
 ) {
 }
 
+CellsOutput::CellsOutput(BasicMetaModel& meta_model,
+		std::string filename,
+		std::size_t grid_width, std::size_t grid_height
+		) :
+	fpmas::io::OutputBase(output_file),
+	output_file(
+			filename + "_cells.%t.json",
+			meta_model.getModel().getMpiCommunicator(),
+			meta_model.getModel().runtime()
+			),
+	meta_model(meta_model), grid_width(grid_width), grid_height(grid_height) {
+	}
 
 void CellsOutput::dump() {
 	auto cells = gather_cells();
-	FPMAS_ON_PROC(model.getMpiCommunicator(), 0) {
+	FPMAS_ON_PROC(meta_model.getModel().getMpiCommunicator(), 0) {
 		nlohmann::json j = cells;
 		output_file.get() << j.dump();
 	}
@@ -151,7 +114,7 @@ std::vector<std::vector<int>> CellsOutput::gather_cells() {
 	typedef std::pair<fpmas::model::DiscretePoint, int> CellLocation;
 
 	std::vector<fpmas::api::model::Agent*> local_cells
-		= model.getGroup(CELL_GROUP).localAgents();
+		= meta_model.cellGroup().localAgents();
 	std::vector<CellLocation> local_cells_location;
 	for(auto cell : local_cells)
 		local_cells_location.push_back({
@@ -175,6 +138,65 @@ std::vector<std::vector<int>> CellsOutput::gather_cells() {
 	}
 	return grid;
 }
+
+MetaAgentView::MetaAgentView(const MetaAgentBase* agent) :
+	id(agent->node()->getId()),
+	contacts(agent->contacts()) {
+		for(auto perception : agent->node()->getOutgoingEdges(fpmas::api::model::PERCEPTION))
+			perceptions.push_back(perception->getTargetNode()->getId());
+	}
+
+MetaGridAgentView::MetaGridAgentView(const MetaGridAgent* agent)
+	: MetaAgentView(agent), location(agent->locationPoint()) {
+	}
+
+DistantAgentView::DistantAgentView(const fpmas::api::model::Agent* agent) :
+	id(agent->node()->getId()),
+	rank(agent->node()->location()) {
+	}
+
+AgentsOutputView::AgentsOutputView(
+		int rank, std::size_t grid_width, std::size_t grid_height,
+		std::vector<MetaAgentView> agents,
+		std::vector<DistantAgentView> distant_agents
+		) :
+	rank(rank), grid_width(grid_width), grid_height(grid_height),
+	agents(agents), distant_agents(distant_agents) {
+}
+
+AgentsOutput::AgentsOutput(
+		BasicMetaModel& meta_model,
+		std::string lb_algorithm,
+		std::size_t grid_width, std::size_t grid_height
+		) :
+	fpmas::io::JsonOutput<AgentsOutputView>(
+			output_file, [this, &meta_model, grid_width, grid_height] () {
+
+			std::vector<MetaAgentView> local_agents;
+			std::vector<DistantAgentView> distant_agents;
+			for(auto agent : meta_model.agentGroup().agents())
+				switch(agent->node()->state()) {
+					case fpmas::api::graph::LOCAL:
+						local_agents.emplace_back(
+								dynamic_cast<const MetaAgentBase*>(agent)
+								);
+					break;
+					case fpmas::api::graph::DISTANT:
+						distant_agents.emplace_back(agent);
+					break;
+				}
+			return AgentsOutputView(
+					meta_model.getModel().getMpiCommunicator().getRank(),
+					grid_width, grid_height, local_agents, distant_agents
+					);
+			}
+			),
+	output_file(
+			lb_algorithm + "_agents.%r.%t.json",
+			meta_model.getModel().getMpiCommunicator(), meta_model.getModel().runtime()
+			),
+	meta_model(meta_model), grid_width(grid_width), grid_height(grid_height) {
+	}
 
 namespace nlohmann {
 	void adl_serializer<MetaAgentView>::to_json(

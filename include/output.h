@@ -16,8 +16,9 @@ fpmas::scheduler::Date, // Time Step
 	unsigned int, // Distribution time
 	float, // Local Agents
 	float, // Local cells
-	float, // Distant agent edges
-	float // Distant cell edges
+	float, // Distant agent->agent edges
+	float, // Distant agent->cell edges
+	float // Distant cell->cell edges
 	> LbCsvOutput;
 
 class LoadBalancingCsvOutput :
@@ -26,13 +27,13 @@ class LoadBalancingCsvOutput :
 		private:
 			fpmas::io::FileOutput file;
 		public:
-			LoadBalancingCsvOutput(BasicMetaModel& test_case);
+			LoadBalancingCsvOutput(BasicMetaModel& meta_model);
 	};
 
 class CellsOutput : public fpmas::io::OutputBase {
 	private:
 		fpmas::io::DynamicFileOutput output_file;
-		fpmas::api::model::Model& model;
+		BasicMetaModel& meta_model;
 		std::size_t grid_width;
 		std::size_t grid_height;
 
@@ -40,19 +41,10 @@ class CellsOutput : public fpmas::io::OutputBase {
 
 	public:
 		CellsOutput(
-				fpmas::api::model::Model& model,
+				BasicMetaModel& meta_model,
 				std::string filename,
 				std::size_t grid_width, std::size_t grid_height
-				)
-			:
-				fpmas::io::OutputBase(output_file),
-				output_file(
-						filename + "_cells.%t.json",
-						model.getMpiCommunicator(),
-						model.runtime()
-						),
-				model(model), grid_width(grid_width), grid_height(grid_height) {
-				}
+				);
 
 		void dump() override;
 };
@@ -124,13 +116,13 @@ struct AgentsOutputView {
 class AgentsOutput : public fpmas::io::JsonOutput<AgentsOutputView> {
 	private:
 		fpmas::io::DynamicFileOutput output_file;
-		fpmas::api::model::Model& model;
+		BasicMetaModel& meta_model;
 		std::size_t grid_width;
 		std::size_t grid_height;
 
 	public:
 		AgentsOutput(
-				fpmas::api::model::Model& model,
+				BasicMetaModel& model,
 				std::string lb_algorithm,
 				std::size_t grid_width, std::size_t grid_height
 				);
