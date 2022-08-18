@@ -9,5 +9,6 @@ add_executable(fpmas-metamodel-tests
 	main.cpp
 	agent.cpp)
 
-target_link_libraries(fpmas-metamodel-tests fpmas-metamodel-lib GTest::gtest_main)
+target_link_libraries(fpmas-metamodel-tests
+	fpmas-metamodel-lib GTest::gtest_main GTest::gmock_main)
 include(GoogleTest)

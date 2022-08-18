@@ -88,7 +88,9 @@ void DotOutput::dump() {
 
 		for(auto& node : nodes) {
 			file << "n" << node.id.rank() << "_" << node.id.id() << "["
-				<< "fixedsize=true,label=\"\",";
+				//<< "label=\"[" + std::to_string(node.id.rank()) + ":" + std::to_string(node.id.id()) + "]\","
+				<< "label=\"\","
+				<< "fixedsize=true,";
 			if(node.fixed_position)
 				// Located nodes = cells
 				file
@@ -96,13 +98,12 @@ void DotOutput::dump() {
 			if(node.is_location)
 				file
 					<< "height=.3,width=.3,"
-					<< "shape=diamond,"
-					<< "style=filled,";
+					<< "shape=diamond,";
 			else
 				file
-					<< "height=.5,width=.5,"
-					<< "style=filled,";
+					<< "height=.5,width=.5,";
 			file
+				<< "style=filled,"
 				<< "fillcolor=" << node.rank+1 << ","
 				<< "color=" << node.rank+1
 				<< "];" << std::endl;

@@ -27,6 +27,36 @@ void dump_grid(
 	}
 }
 
+void graph_stats_output(
+		BasicMetaModelFactory* model_factory,
+		const BenchmarkConfig& config,
+		fpmas::io::FileOutput& file
+		) {
+	fpmas::scheduler::Scheduler scheduler;
+	fpmas::runtime::Runtime runtime(scheduler);
+	fpmas::model::RandomLoadBalancing random_lb(fpmas::communication::WORLD);
+	auto* model = model_factory->build(
+			"graph_stats", config, scheduler, runtime, random_lb, 1
+			)->init();
+
+	DotOutput dot_output(*model, "test_cl");
+	dot_output.dump();
+	float C = fpmas::graph::clustering_coefficient(
+			model->getModel().graph(), fpmas::api::model::CELL_SUCCESSOR);
+	float L = fpmas::graph::characteristic_path_length(
+			model->getModel().graph(), fpmas::api::model::CELL_SUCCESSOR,
+			fpmas::model::local_agent_ids(model->cellGroup()));
+	
+	FPMAS_ON_PROC(model->getModel().getMpiCommunicator(), 0) {
+		fpmas::io::CsvOutput<float, float> graph_stats_csv(
+				file,
+				{"C", [C] () {return C;}},
+				{"L", [L] () {return L;}}
+				);
+		graph_stats_csv.dump();
+	}
+}
+
 LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
 	:
 		fpmas::io::FileOutput(

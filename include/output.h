@@ -8,7 +8,14 @@ void dump_grid(
 		std::vector<MetaGridCell*> local_cells
 		);
 
+class BasicMetaModelFactory;
 class BasicMetaModel;
+
+void graph_stats_output(
+		BasicMetaModelFactory* model_factory,
+		const BenchmarkConfig& config,
+		fpmas::io::FileOutput& file
+		);
 
 typedef fpmas::io::CsvOutput<
 fpmas::scheduler::Date, // Time Step
