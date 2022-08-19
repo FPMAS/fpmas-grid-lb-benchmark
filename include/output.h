@@ -12,9 +12,8 @@ class BasicMetaModelFactory;
 class BasicMetaModel;
 
 void graph_stats_output(
-		BasicMetaModelFactory* model_factory,
-		const BenchmarkConfig& config,
-		fpmas::io::FileOutput& file
+		BasicMetaModel& model,
+		std::string file_name
 		);
 
 typedef fpmas::io::CsvOutput<

@@ -11,7 +11,13 @@ FetchContent_Declare(
 	GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
 	GIT_TAG yaml-cpp-0.7.0
 	)
-FetchContent_MakeAvailable(yaml-cpp)
+FetchContent_Declare(
+	cli11
+	GIT_REPOSITORY https://github.com/CLIUtils/CLI11
+	GIT_TAG        v2.2.0
+	)
+
+FetchContent_MakeAvailable(yaml-cpp cli11)
 
 add_library(fpmas-metamodel-lib
 	src/agent.cpp
@@ -22,10 +28,13 @@ add_library(fpmas-metamodel-lib
 	src/output.cpp
 	src/dot.cpp)
 include_directories(include)
+target_link_libraries(fpmas-metamodel-lib fpmas::fpmas yaml-cpp::yaml-cpp
+	CLI11::CLI11)
 
-add_executable(fpmas-metamodel main.cpp)
-
-target_link_libraries(fpmas-metamodel-lib fpmas::fpmas yaml-cpp::yaml-cpp)
+add_executable(fpmas-metamodel run_model.cpp)
 target_link_libraries(fpmas-metamodel fpmas-metamodel-lib)
+
+add_executable(fpmas-metamodel-graph-stats graph_stats.cpp)
+target_link_libraries(fpmas-metamodel-graph-stats fpmas-metamodel-lib)
 
 add_subdirectory(tests)

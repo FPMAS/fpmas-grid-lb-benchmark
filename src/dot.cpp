@@ -11,7 +11,7 @@ DotOutput::DotOutput(
 		) :
 	fpmas::io::OutputBase(output_file),
 	output_file(
-			filename + ".%t.dot",
+			filename + ".dot",
 			meta_model.getModel().getMpiCommunicator(),
 			meta_model.getModel().runtime()
 			),
@@ -81,10 +81,10 @@ void DotOutput::dump() {
 
 	auto& file = output_file.get();
 	FPMAS_ON_PROC(fpmas::communication::WORLD, 0) {
-		file << "strict graph model {" << std::endl;
+		file << "digraph model {" << std::endl;
 		file << "overlap=true;size=\"10,10\";K=1;ratio=compress;outputorder=edgesfirst;" << std::endl;
 		file << "node [colorscheme=set19];" << std::endl;
-		file << "edge [colorscheme=set39,dir=none];" << std::endl;
+		file << "edge [colorscheme=set39];" << std::endl;
 
 		for(auto& node : nodes) {
 			file << "n" << node.id.rank() << "_" << node.id.id() << "["
@@ -110,7 +110,7 @@ void DotOutput::dump() {
 		}
 		for(auto& edge : edges) {
 			file
-				<< "n" << edge.src.rank() << "_" << edge.src.id() << " -- "
+				<< "n" << edge.src.rank() << "_" << edge.src.id() << " -> "
 				<< "n" << edge.tgt.rank() << "_" << edge.tgt.id() << " "
 				<< "[color=" << 6+edge.layer << ",";
 			if(

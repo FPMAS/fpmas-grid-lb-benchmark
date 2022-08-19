@@ -49,15 +49,18 @@ void MetaGridModel::buildAgents(const BenchmarkConfig& config) {
 void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
 	fpmas::random::PoissonDistribution<std::size_t> edge_dist(config.output_degree);
 	fpmas::api::graph::DistributedGraphBuilder<fpmas::model::AgentPtr>* builder;
-	switch(config.graph_type) {
-		case GraphType::RANDOM:
+	switch(config.environment) {
+		case Environment::RANDOM:
 			builder = new DistributedUniformGraphBuilder(edge_dist);
 			break;
-		case GraphType::CLUSTERED:
+		case Environment::CLUSTERED:
 			builder = new DistributedClusteredGraphBuilder(edge_dist);
 			break;
-		case GraphType::SMALL_WORLD:
-			builder = new SmallWorldGraphBuilder(0.1, config.output_degree);
+		case Environment::SMALL_WORLD:
+			builder = new SmallWorldGraphBuilder(config.p, config.output_degree);
+			break;
+		default:
+			// Grid type
 			break;
 	}
 	SpatialGraphBuilder<MetaGraphCell> graph_builder(*builder, config.num_cells);

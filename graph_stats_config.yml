@@ -1,0 +1,23 @@
+[
+  {
+    environment: GRID,
+    grid_width: 25,
+    grid_height: 40
+  },
+  {
+    environment: CLUSTERED,
+    num_cells: 1000,
+    output_degree: 8
+  },
+  {
+    environment: RANDOM,
+    num_cells: 1000,
+    output_degree: 8
+  },
+  {
+    environment: SMALL_WORLD,
+    num_cells: 1000,
+    output_degree: 8,
+    p: 0.1
+  }
+]

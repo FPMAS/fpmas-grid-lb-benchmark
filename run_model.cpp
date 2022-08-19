@@ -1,6 +1,11 @@
 #include "fpmas.h"
 #include "metamodel.h"
 #include "fpmas/model/spatial/cell_load_balancing.h"
+#include "CLI/App.hpp"
+#include "CLI/Formatter.hpp"
+#include "CLI/Config.hpp"
+#include "yaml-cpp/node/parse.h"
+
 
 FPMAS_BASE_DATAPACK_SET_UP(
 		GridCell::JsonBase,
@@ -31,14 +36,19 @@ int main(int argc, char** argv) {
 			MetaGraphCell::JsonBase,
 			MetaGraphAgent::JsonBase
 			);
-	if(argc <= 1) {
-		std::cerr << "[FATAL ERROR] Missing config file argument" << std::endl;
-		return EXIT_FAILURE;
-	}
+	CLI::App app("fpmas-metamodel");
+	std::string config_file;
+	app.add_option("config_file", config_file, "Metamodel YAML configuration file")
+		->required();
+	unsigned long seed = fpmas::random::default_seed;
+	app.add_option("-s,--seed", seed, "Random seed");
 
+	CLI11_PARSE(app, argc, argv);
+
+	fpmas::seed(seed);
 	fpmas::init(argc, argv);
 	{
-		BenchmarkConfig config(argv[1]);
+		BenchmarkConfig config(YAML::LoadFile(config_file));
 		if(!config.is_valid)
 			return EXIT_FAILURE;
 
@@ -47,9 +57,9 @@ int main(int argc, char** argv) {
 			case Environment::GRID:
 				model_factory = new MetaModelFactory<MetaGridModel>;
 				break;
-			case Environment::GRAPH:
+			default:
+				// All other graph types
 				model_factory = new MetaModelFactory<MetaGraphModel>;
-				break;
 		}
 
 		for(auto test_case : config.test_cases) {
@@ -63,7 +73,7 @@ int main(int argc, char** argv) {
 							ZoltanLoadBalancing zoltan_lb(
 									fpmas::communication::WORLD, lb_period);
 							BasicMetaModel* model = model_factory->build(
-									"zoltan_lb", config,
+									"zoltan_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, zoltan_lb, lb_period
 									);
 							model->init()->run();
@@ -78,7 +88,7 @@ int main(int argc, char** argv) {
 									zoltan_lb, scheduler, runtime
 									);
 							BasicMetaModel* model = model_factory->build(
-									"scheduled_lb", config,
+									"scheduled_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, scheduled_load_balancing,
 									lb_period
 									);
@@ -93,7 +103,7 @@ int main(int argc, char** argv) {
 									fpmas::communication::WORLD
 									);
 							BasicMetaModel* model = model_factory->build(
-									"grid_lb", config,
+									"grid_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, grid_lb, lb_period
 									);
 							model->init()->run();
@@ -108,7 +118,7 @@ int main(int argc, char** argv) {
 									fpmas::communication::WORLD, zoltan_lb
 									);
 							BasicMetaModel* model = model_factory->build(
-									"zoltan_cell_lb", config,
+									"zoltan_cell_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, zoltan_cell_lb, lb_period
 									);
 							model->init()->run();
@@ -120,7 +130,7 @@ int main(int argc, char** argv) {
 
 							RandomLoadBalancing random_lb(fpmas::communication::WORLD);
 							BasicMetaModel* model = model_factory->build(
-									"random_lb", config,
+									"random_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, random_lb, lb_period
 									);
 							model->init()->run();

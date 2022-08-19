@@ -1,98 +1,74 @@
 #include "agent.h"
 
-
-#define LOAD_YAML_CONFIG_0(FIELD_NAME, TYPENAME)\
-	load_config(#FIELD_NAME, FIELD_NAME, config[#FIELD_NAME], #TYPENAME)
-#define LOAD_YAML_CONFIG_1(ROOT, FIELD_NAME, TYPENAME)\
-	load_config(#ROOT "::" #FIELD_NAME, ROOT::FIELD_NAME, config[#ROOT][#FIELD_NAME], #TYPENAME)
-
-BenchmarkConfig::BenchmarkConfig(std::string config_file) {
-	try {
-		YAML::Node config = YAML::LoadFile(config_file);
-
-		LOAD_YAML_CONFIG_0(environment, Environment);
-		switch(this->environment) {
-			case Environment::GRID:
-				LOAD_YAML_CONFIG_0(grid_width, unsigned int);
-				LOAD_YAML_CONFIG_0(grid_height, unsigned int);
-				break;
-			case Environment::GRAPH:
-				LOAD_YAML_CONFIG_0(graph_type, GraphType);
-				LOAD_YAML_CONFIG_0(num_cells, unsigned int);
-				LOAD_YAML_CONFIG_0(output_degree, unsigned int);
-				break;
-		}
-
-		LOAD_YAML_CONFIG_0(occupation_rate, float);
-		LOAD_YAML_CONFIG_0(num_steps, fpmas::api::scheduler::TimeStep);
-		LOAD_YAML_CONFIG_0(utility, Utility);
-		LOAD_YAML_CONFIG_0(agent_interactions, AgentInteractions);
-		LOAD_YAML_CONFIG_0(cell_weight, float);
-		LOAD_YAML_CONFIG_0(agent_weight, float);
-		LOAD_YAML_CONFIG_0(refresh_local_contacts, fpmas::api::scheduler::TimeStep);
-		LOAD_YAML_CONFIG_0(refresh_distant_contacts, fpmas::api::scheduler::TimeStep);
-		LOAD_YAML_CONFIG_1(MetaAgentBase, move_policy, MovePolicy);
-		LOAD_YAML_CONFIG_1(MetaAgentBase, range_size, unsigned int);
-		LOAD_YAML_CONFIG_1(MetaAgentBase, contact_weight, float);
-		LOAD_YAML_CONFIG_1(MetaAgentBase, max_contacts, unsigned int);
-		LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
-		LOAD_YAML_CONFIG_0(test_cases, std::vector<TestCaseConfig>);
-	} catch(const YAML::BadFile&) {
-		this->is_valid = false;
-		std::cerr << "[FATAL ERROR] Config file not found: " << config_file << std::endl;
+GraphConfig::GraphConfig(YAML::Node config) {
+	LOAD_YAML_CONFIG_0(environment, Environment);
+	switch(this->environment) {
+		case Environment::GRID:
+			LOAD_YAML_CONFIG_0(grid_width, unsigned int);
+			LOAD_YAML_CONFIG_0(grid_height, unsigned int);
+			break;
+		case Environment::SMALL_WORLD:
+			LOAD_YAML_CONFIG_0(p, float);
+		case Environment::CLUSTERED:
+		case Environment::RANDOM:
+			LOAD_YAML_CONFIG_0(num_cells, unsigned int);
+			LOAD_YAML_CONFIG_0(output_degree, unsigned int);
 	}
 }
 
+BenchmarkConfig::BenchmarkConfig(const GraphConfig& graph_config)
+	: GraphConfig(graph_config) {
+	}
+
+BenchmarkConfig::BenchmarkConfig(YAML::Node config) : GraphConfig(config) {
+	LOAD_YAML_CONFIG_0(occupation_rate, float);
+	LOAD_YAML_CONFIG_0(num_steps, fpmas::api::scheduler::TimeStep);
+	LOAD_YAML_CONFIG_0(utility, Utility);
+	LOAD_YAML_CONFIG_0(agent_interactions, AgentInteractions);
+	LOAD_YAML_CONFIG_0(cell_weight, float);
+	LOAD_YAML_CONFIG_0(agent_weight, float);
+	LOAD_YAML_CONFIG_0(refresh_local_contacts, fpmas::api::scheduler::TimeStep);
+	LOAD_YAML_CONFIG_0(refresh_distant_contacts, fpmas::api::scheduler::TimeStep);
+	LOAD_YAML_CONFIG_1(MetaAgentBase, move_policy, MovePolicy);
+	LOAD_YAML_CONFIG_1(MetaAgentBase, range_size, unsigned int);
+	LOAD_YAML_CONFIG_1(MetaAgentBase, contact_weight, float);
+	LOAD_YAML_CONFIG_1(MetaAgentBase, max_contacts, unsigned int);
+	LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
+	LOAD_YAML_CONFIG_0(test_cases, std::vector<TestCaseConfig>);
+}
+
 namespace YAML {
-	Node convert<Environment>::encode(const Environment& environment) {
-		switch(environment) {
+	Node convert<Environment>::encode(const Environment& graph_type) {
+		switch(graph_type) {
 			case Environment::GRID:
 				return Node("GRID");
-			case Environment::GRAPH:
-				return Node("GRAPH");
-			default:
-				return Node();
-		}
-	}
-
-	bool convert<Environment>::decode(const Node &node, Environment& environment) {
-		std::string str = node.as<std::string>();
-		if(str == "GRID") {
-			environment = Environment::GRID;
-			return true;
-		}
-		if(str == "GRAPH") {
-			environment = Environment::GRAPH;
-			return true;
-		}
-		return false;
-	}
-
-	Node convert<GraphType>::encode(const GraphType& graph_type) {
-		switch(graph_type) {
-			case GraphType::RANDOM:
+			case Environment::RANDOM:
 				return Node("RANDOM");
-			case GraphType::CLUSTERED:
+			case Environment::CLUSTERED:
 				return Node("CLUSTERED");
-			case GraphType::SMALL_WORLD:
+			case Environment::SMALL_WORLD:
 				return Node("SMALL_WORLD");
 			default:
 				return Node();
 		}
 	}
 
-	bool convert<GraphType>::decode(const Node &node, GraphType& graph_type) {
+	bool convert<Environment>::decode(const Node &node, Environment& graph_type) {
 		std::string str = node.as<std::string>();
+		if(str == "GRID") {
+			graph_type = Environment::GRID;
+			return true;
+		}
 		if(str == "RANDOM") {
-			graph_type = GraphType::RANDOM;
+			graph_type = Environment::RANDOM;
 			return true;
 		}
 		if(str == "CLUSTERED") {
-			graph_type = GraphType::CLUSTERED;
+			graph_type = Environment::CLUSTERED;
 			return true;
 		}
 		if(str == "SMALL_WORLD") {
-			graph_type = GraphType::SMALL_WORLD;
+			graph_type = Environment::SMALL_WORLD;
 			return true;
 		}
 		return false;

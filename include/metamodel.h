@@ -6,7 +6,7 @@
 
 class BasicMetaModel {
 	public:
-		virtual std::string getLoadBalancingAlgorithmeName() const = 0;
+		virtual std::string getName() const = 0;
 		virtual LoadBalancingProbe& getLoadBalancingProbe() = 0;
 		virtual fpmas::api::model::Model& getModel() = 0;
 		virtual fpmas::api::model::AgentGroup& cellGroup() = 0;
@@ -46,7 +46,7 @@ class MetaModel : public BasicMetaModel {
 
 	public:
 		BaseModel model;
-		std::string lb_algorithm_name;
+		std::string name;
 		LoadBalancingProbe lb_probe;
 
 	private:
@@ -62,7 +62,7 @@ class MetaModel : public BasicMetaModel {
 
 	public:
 		MetaModel(
-				std::string lb_algorithm_name, BenchmarkConfig config,
+				std::string name, BenchmarkConfig config,
 				fpmas::api::scheduler::Scheduler& scheduler,
 				fpmas::api::runtime::Runtime& runtime,
 				fpmas::api::model::LoadBalancing& lb_algorithm,
@@ -75,8 +75,8 @@ class MetaModel : public BasicMetaModel {
 			model.runtime().run(config.num_steps);
 		}
 
-		std::string getLoadBalancingAlgorithmeName() const override {
-			return lb_algorithm_name;
+		std::string getName() const override {
+			return name;
 		}
 
 		LoadBalancingProbe& getLoadBalancingProbe() override {
@@ -98,18 +98,18 @@ class MetaModel : public BasicMetaModel {
 
 template<typename BaseModel, typename AgentType>
 MetaModel<BaseModel, AgentType>::MetaModel(
-		std::string lb_algorithm_name, BenchmarkConfig config,
+		std::string name, BenchmarkConfig config,
 		fpmas::api::scheduler::Scheduler& scheduler,
 		fpmas::api::runtime::Runtime& runtime,
 		fpmas::api::model::LoadBalancing& lb_algorithm,
 		fpmas::scheduler::TimeStep lb_period
 		) :
-	lb_algorithm_name(lb_algorithm_name + "-" + std::to_string(lb_period)),
+	name(name),
 	model(scheduler, runtime, lb_algorithm),
 	lb_probe(model.graph(), lb_algorithm), csv_output(*this),
-	cells_output(*this, this->lb_algorithm_name, config.grid_width, config.grid_height),
-	agents_output(*this, this->lb_algorithm_name, config.grid_width, config.grid_height),
-	dot_output(*this, this->lb_algorithm_name),
+	cells_output(*this, this->name, config.grid_width, config.grid_height),
+	agents_output(*this, this->name, config.grid_width, config.grid_height),
+	dot_output(*this, this->name + ".%t"),
 	config(config) {
 		auto& cell_group = model.buildGroup(CELL_GROUP, cell_behavior);
 		auto& create_relations_neighbors_group = model.buildGroup(
@@ -127,21 +127,23 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 
 	
 		scheduler.schedule(0, lb_period, lb_probe.job);
-		if(config.agent_interactions == AgentInteractions::CONTACTS) {
-			scheduler.schedule(
-					0.20, config.refresh_local_contacts,
-					create_relations_neighbors_group.jobs()
-					);
-			scheduler.schedule(
-					0.21, config.refresh_distant_contacts,
-					create_relations_contacts_group.jobs()
-					);
-			scheduler.schedule(
-					0.22, config.refresh_distant_contacts,
-					handle_new_contacts_group.jobs()
-					);
+		if(config.occupation_rate > 0.0) {
+			if(config.agent_interactions == AgentInteractions::CONTACTS) {
+				scheduler.schedule(
+						0.20, config.refresh_local_contacts,
+						create_relations_neighbors_group.jobs()
+						);
+				scheduler.schedule(
+						0.21, config.refresh_distant_contacts,
+						create_relations_contacts_group.jobs()
+						);
+				scheduler.schedule(
+						0.22, config.refresh_distant_contacts,
+						handle_new_contacts_group.jobs()
+						);
+			}
+			scheduler.schedule(0.23, 1, move_group.jobs());
 		}
-		scheduler.schedule(0.23, 1, move_group.jobs());
 		scheduler.schedule(0.24, 1, cell_group.jobs());
 		scheduler.schedule(0.3, 1, csv_output.job());
 
@@ -152,8 +154,9 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 		if(config.environment == Environment::GRID)
 			// JSON cell output
 			scheduler.schedule(last_lb_date + 0.02, cells_output.job());
-		// JSON agent output
-		scheduler.schedule(last_lb_date + 0.03, agents_output.job());
+		if(config.occupation_rate > 0.0)
+			// JSON agent output
+			scheduler.schedule(last_lb_date + 0.03, agents_output.job());
 		// Dot output
 		scheduler.schedule(last_lb_date + 0.04, dot_output.job());
 }

@@ -8,6 +8,7 @@ grid_height: 100
 #graph_type: SMALL_WORLD
 #num_cells: 1000
 #output_degree: 6
+#p: 0.1
 
 # Used to compute the agent count
 occupation_rate: 0.5
