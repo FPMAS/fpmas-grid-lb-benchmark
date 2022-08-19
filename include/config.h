@@ -17,8 +17,12 @@ FPMAS_DEFINE_LAYERS(CONTACT, NEW_CONTACT);
 
 #define LOAD_YAML_CONFIG_0(FIELD_NAME, TYPENAME)\
 	load_config(#FIELD_NAME, FIELD_NAME, config[#FIELD_NAME], #TYPENAME)
+#define LOAD_YAML_CONFIG_0_OPTIONAL(FIELD_NAME, TYPENAME, DEFAULT)\
+	load_config_optional(#FIELD_NAME, FIELD_NAME, config[#FIELD_NAME], #TYPENAME, DEFAULT)
 #define LOAD_YAML_CONFIG_1(ROOT, FIELD_NAME, TYPENAME)\
 	load_config(#ROOT "::" #FIELD_NAME, ROOT::FIELD_NAME, config[#ROOT][#FIELD_NAME], #TYPENAME)
+#define LOAD_YAML_CONFIG_1_OPTIONAL(ROOT, FIELD_NAME, TYPENAME, DEFAULT)\
+	load_config_optional(#ROOT "::" #FIELD_NAME, ROOT::FIELD_NAME, config[#ROOT][#FIELD_NAME], #TYPENAME, DEFAULT)
 
 
 enum class Environment {
@@ -60,6 +64,26 @@ struct GraphConfig {
 	std::size_t num_cells;
 	std::size_t output_degree;
 	float p;
+	float cell_weight = 1.0f;
+
+	template<typename T>
+		void load_config_optional(
+				std::string field_name, T& target, YAML::Node node,
+				std::string type_name, const T& default_value) {
+			if(node.IsDefined()) {
+				try{
+					target = node.as<T>();
+				} catch (const YAML::TypedBadConversion<T>& e) {
+					this->is_valid = false;
+					std::cerr <<
+						"[FATAL ERROR] Bad " + field_name + " field parsing. "
+						"Expected type: " + type_name
+						<< std::endl;
+				}
+			} else {
+				target = default_value;
+			}
+		}
 
 	template<typename T>
 		void load_config(
@@ -91,10 +115,9 @@ struct GraphConfig {
 struct BenchmarkConfig : public GraphConfig {
 	float occupation_rate;
 	fpmas::api::scheduler::TimeStep num_steps;
-	Utility utility;
-	AgentInteractions agent_interactions;
-	float cell_weight;
-	float agent_weight;
+	Utility utility = Utility::UNIFORM;
+	AgentInteractions agent_interactions = AgentInteractions::LOCAL;
+	float agent_weight = 1.0f;
 	fpmas::api::scheduler::TimeStep refresh_local_contacts;
 	fpmas::api::scheduler::TimeStep refresh_distant_contacts;
 	std::vector<Attractor> attractors;

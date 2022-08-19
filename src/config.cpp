@@ -14,6 +14,7 @@ GraphConfig::GraphConfig(YAML::Node config) {
 			LOAD_YAML_CONFIG_0(num_cells, unsigned int);
 			LOAD_YAML_CONFIG_0(output_degree, unsigned int);
 	}
+	LOAD_YAML_CONFIG_0_OPTIONAL(cell_weight, float, 1.0f);
 }
 
 BenchmarkConfig::BenchmarkConfig(const GraphConfig& graph_config)
@@ -23,17 +24,25 @@ BenchmarkConfig::BenchmarkConfig(const GraphConfig& graph_config)
 BenchmarkConfig::BenchmarkConfig(YAML::Node config) : GraphConfig(config) {
 	LOAD_YAML_CONFIG_0(occupation_rate, float);
 	LOAD_YAML_CONFIG_0(num_steps, fpmas::api::scheduler::TimeStep);
-	LOAD_YAML_CONFIG_0(utility, Utility);
-	LOAD_YAML_CONFIG_0(agent_interactions, AgentInteractions);
-	LOAD_YAML_CONFIG_0(cell_weight, float);
-	LOAD_YAML_CONFIG_0(agent_weight, float);
-	LOAD_YAML_CONFIG_0(refresh_local_contacts, fpmas::api::scheduler::TimeStep);
-	LOAD_YAML_CONFIG_0(refresh_distant_contacts, fpmas::api::scheduler::TimeStep);
-	LOAD_YAML_CONFIG_1(MetaAgentBase, move_policy, MovePolicy);
-	LOAD_YAML_CONFIG_1(MetaAgentBase, range_size, unsigned int);
-	LOAD_YAML_CONFIG_1(MetaAgentBase, contact_weight, float);
-	LOAD_YAML_CONFIG_1(MetaAgentBase, max_contacts, unsigned int);
-	LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
+	LOAD_YAML_CONFIG_0_OPTIONAL(utility, Utility, Utility::UNIFORM);
+	if(this->occupation_rate > 0.0) {
+		LOAD_YAML_CONFIG_0_OPTIONAL(agent_weight, float, 1.0f);
+		LOAD_YAML_CONFIG_0_OPTIONAL(
+				agent_interactions, AgentInteractions, AgentInteractions::LOCAL
+				);
+		if(this->agent_interactions == AgentInteractions::CONTACTS) {
+			LOAD_YAML_CONFIG_0(refresh_local_contacts, fpmas::api::scheduler::TimeStep);
+			LOAD_YAML_CONFIG_0(refresh_distant_contacts, fpmas::api::scheduler::TimeStep);
+			LOAD_YAML_CONFIG_1(MetaAgentBase, contact_weight, float);
+			LOAD_YAML_CONFIG_1(MetaAgentBase, max_contacts, unsigned int);
+		}
+	}
+	LOAD_YAML_CONFIG_1_OPTIONAL(
+			MetaAgentBase, move_policy, MovePolicy, MovePolicy::RANDOM);
+	LOAD_YAML_CONFIG_1_OPTIONAL(
+			MetaAgentBase, range_size, unsigned int, (std::size_t) 1);
+	if(this->utility != Utility::UNIFORM)
+		LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
 	LOAD_YAML_CONFIG_0(test_cases, std::vector<TestCaseConfig>);
 }
 
