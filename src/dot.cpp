@@ -4,6 +4,7 @@
 #include <fpmas/utils/macros.h>
 #include <fpmas/utils/functional.h>
 #include <fpmas/api/model/spatial/grid.h>
+#include <iomanip>
 
 const std::string set19_color_scheme[9] {
 	"#e41a1c", // red
