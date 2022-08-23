@@ -8,19 +8,19 @@ void MetaSpatialCell::update_edge_weights() {
 		edge->setWeight(agent_count);
 };
 
-float UniformUtility::utility(Attractor, DiscretePoint) const {
+float UniformUtility::utility(GridAttractor, DiscretePoint) const {
 	return 1.f;
 }
 
-float LinearUtility::utility(Attractor attractor, DiscretePoint point) const {
+float LinearUtility::utility(GridAttractor attractor, DiscretePoint point) const {
 	return std::max(
-			0.f, attractor.radius - fpmas::api::model::euclidian_distance(
+			0.f, 1.0f - fpmas::api::model::euclidian_distance(
 				attractor.center, point
-				)
+				) / attractor.radius
 			);
 }
 
-float InverseUtility::utility(Attractor attractor, DiscretePoint point) const {
+float InverseUtility::utility(GridAttractor attractor, DiscretePoint point) const {
 	// 1/x like utility function depending on the distance from the center.
 	// Utility=1 at center
 	// Utility=beta when distance=radius
@@ -31,7 +31,7 @@ float InverseUtility::utility(Attractor attractor, DiscretePoint point) const {
 				)-offset));
 }
 
-float StepUtility::utility(Attractor attractor, DiscretePoint point) const {
+float StepUtility::utility(GridAttractor attractor, DiscretePoint point) const {
 	if(fpmas::api::model::euclidian_distance(
 			attractor.center, point
 			) > attractor.radius)

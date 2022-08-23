@@ -13,22 +13,27 @@ class NodeView {
 		int y;
 		bool is_location;
 		bool fixed_position;
+		float utility;
+
 	private:
 		NodeView(
 				DistributedId id, int rank, bool is_location,
-				bool fixed_position, int x, int y) :
+				float utility, bool fixed_position, int x, int y) :
 			id(id), rank(rank), is_location(is_location),
-			fixed_position(fixed_position), x(x), y(y) {
+			utility(utility), fixed_position(fixed_position), x(x), y(y) {
 			}
 
 	public:
 		NodeView() = default;
 
-		NodeView(DistributedId id, int rank, bool is_location)
-			: NodeView(id, rank, is_location, false, {}, {}) {
+		NodeView(DistributedId id, int rank, float utility)
+			: NodeView(id, rank, true, utility, false, {}, {}) {
 			}
-		NodeView(DistributedId id, int rank, bool is_location, int x, int y)
-			: NodeView(id, rank, is_location, true, x, y) {
+		NodeView(DistributedId id, int rank)
+			: NodeView(id, rank, false, 1.0f, false, {}, {}) {
+			}
+		NodeView(DistributedId id, int rank, float utility, int x, int y)
+			: NodeView(id, rank, true, utility, true, x, y) {
 			}
 };
 

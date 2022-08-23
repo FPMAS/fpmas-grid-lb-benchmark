@@ -46,8 +46,11 @@ enum class AgentInteractions {
 };
 
 struct Attractor {
-	fpmas::api::model::DiscretePoint center;
 	float radius;
+};
+
+struct GridAttractor : public Attractor {
+	fpmas::api::model::DiscretePoint center;
 };
 
 struct TestCaseConfig {
@@ -65,6 +68,9 @@ struct GraphConfig {
 	std::size_t output_degree;
 	float p;
 	float cell_weight = 1.0f;
+	Utility utility = Utility::UNIFORM;
+	std::vector<Attractor> attractors;
+	std::vector<GridAttractor> grid_attractors;
 
 	template<typename T>
 		void load_config_optional(
@@ -115,12 +121,10 @@ struct GraphConfig {
 struct BenchmarkConfig : public GraphConfig {
 	float occupation_rate;
 	fpmas::api::scheduler::TimeStep num_steps;
-	Utility utility = Utility::UNIFORM;
 	AgentInteractions agent_interactions = AgentInteractions::LOCAL;
 	float agent_weight = 1.0f;
 	fpmas::api::scheduler::TimeStep refresh_local_contacts;
 	fpmas::api::scheduler::TimeStep refresh_distant_contacts;
-	std::vector<Attractor> attractors;
 	std::vector<TestCaseConfig> test_cases;
 
 	BenchmarkConfig(const GraphConfig& graph_config);
@@ -162,6 +166,12 @@ namespace YAML {
 		struct convert<Attractor> {
 			static Node encode(const Attractor& rhs);
 			static bool decode(const Node& node, Attractor& rhs);
+		};
+
+	template<>
+		struct convert<GridAttractor> {
+			static Node encode(const GridAttractor& rhs);
+			static bool decode(const Node& node, GridAttractor& rhs);
 		};
 
 	template<>

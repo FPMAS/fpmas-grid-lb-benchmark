@@ -5,6 +5,25 @@
 #include <fpmas/utils/functional.h>
 #include <fpmas/api/model/spatial/grid.h>
 
+const std::string set19_color_scheme[9] {
+	"#e41a1c", // red
+	"#377eb8", // blue
+	"#4daf4a", // green
+	"#984ea3", // purple
+	"#ff7f00", // orange
+	"#ffff33", // yellow
+	"#a65628", // brown
+	"#f781bf", // pink
+	"#999999"  // grey
+};
+
+std::string rgb_color_with_alpha(const std::string& color, float alpha) {
+	unsigned int alpha_int = alpha*255;
+	std::ostringstream str;
+	str << color << std::hex << std::left << std::setfill('0') << std::setw(2) << alpha_int;
+	return str.str();
+}
+
 DotOutput::DotOutput(
 		BasicMetaModel& meta_model,
 		std::string filename
@@ -26,13 +45,15 @@ void DotOutput::dump() {
 		// GridCells have a fixed location
 		if(auto located_cell = dynamic_cast<fpmas::api::model::GridCell*>(cell->node()->data().get())) {
 			nodes.push_back({
-					cell->node()->getId(), cell->node()->location(), true,
+					cell->node()->getId(), cell->node()->location(),
+					dynamic_cast<MetaCell*>(located_cell)->getUtility(),
 					(int) located_cell->location().x, (int) located_cell->location().y
 					});
 			// Other cell types have not
 		} else {
 			nodes.push_back({
-					cell->node()->getId(), cell->node()->location(), true,
+					cell->node()->getId(), cell->node()->location(),
+					dynamic_cast<MetaCell*>(located_cell)->getUtility()
 					});
 		}
 		for(auto& edge : cell->node()->getOutgoingEdges(fpmas::api::model::CELL_SUCCESSOR)) {
@@ -45,7 +66,7 @@ void DotOutput::dump() {
 	}
 	for(auto& agent : meta_model.agentGroup().localAgents()) {
 		nodes.push_back({
-				agent->node()->getId(), agent->node()->location(), false
+				agent->node()->getId(), agent->node()->location()
 				});
 		std::vector<fpmas::model::AgentEdge*> agent_edges;
 		auto contacts = agent->node()->getOutgoingEdges(CONTACT);
@@ -62,7 +83,7 @@ void DotOutput::dump() {
 			edges.push_back({
 					edge->getId(),
 					agent->node()->getId(), edge->getTargetNode()->getId(),
-					CONTACT
+					edge->getLayer()
 					});
 		}
 	}
@@ -83,7 +104,8 @@ void DotOutput::dump() {
 	FPMAS_ON_PROC(fpmas::communication::WORLD, 0) {
 		file << "digraph model {" << std::endl;
 		file << "overlap=true;size=\"10,10\";K=1;ratio=compress;outputorder=edgesfirst;" << std::endl;
-		file << "node [colorscheme=set19];" << std::endl;
+		//file << "node [colorscheme=set19];" << std::endl;
+		file << "node [];" << std::endl;
 		file << "edge [colorscheme=set39];" << std::endl;
 
 		for(auto& node : nodes) {
@@ -104,8 +126,10 @@ void DotOutput::dump() {
 					<< "height=.5,width=.5,";
 			file
 				<< "style=filled,"
-				<< "fillcolor=" << node.rank+1 << ","
-				<< "color=" << node.rank+1
+				<< "fillcolor=\"" << rgb_color_with_alpha(
+						set19_color_scheme[node.rank], node.utility
+						) << "\","
+				<< "color=\"" << set19_color_scheme[node.rank] << "\""
 				<< "];" << std::endl;
 		}
 		for(auto& edge : edges) {
@@ -142,6 +166,8 @@ void to_json(nlohmann::json& json, const NodeView& node_view) {
 		json[4] = node_view.x;
 		json[5] = node_view.y;
 	}
+	if(node_view.is_location)
+		json[6] = node_view.utility;
 }
 
 void from_json(const nlohmann::json& json, NodeView& node_view) {
@@ -153,6 +179,8 @@ void from_json(const nlohmann::json& json, NodeView& node_view) {
 		json[4].get_to(node_view.x);
 		json[5].get_to(node_view.y);
 	}
+	if(node_view.is_location)
+		json[6].get_to(node_view.utility);
 }
 
 void to_json(nlohmann::json& json, const EdgeView& edge_view) {

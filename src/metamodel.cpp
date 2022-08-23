@@ -19,7 +19,7 @@ void MetaGridModel::buildCells(const BenchmarkConfig& config) {
 			utility_function.reset(new StepUtility);
 			break;
 	}
-	MetaGridCellFactory cell_factory(*utility_function, config.attractors);
+	MetaGridCellFactory cell_factory(*utility_function, config.grid_attractors);
 	MooreGrid<MetaGridCell>::Builder grid(
 			cell_factory, config.grid_width, config.grid_height);
 
@@ -46,6 +46,14 @@ void MetaGridModel::buildAgents(const BenchmarkConfig& config) {
 			agent_factory, mapping);
 }
 
+struct MetaGraphCellFactory {
+
+
+	MetaGraphCell* operator()() {
+
+	}
+};
+
 void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
 	fpmas::random::PoissonDistribution<std::size_t> edge_dist(config.output_degree);
 	fpmas::api::graph::DistributedGraphBuilder<fpmas::model::AgentPtr>* builder;
@@ -63,7 +71,10 @@ void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
 			// Grid type
 			break;
 	}
-	SpatialGraphBuilder<MetaGraphCell> graph_builder(*builder, config.num_cells);
+	SpatialGraphBuilder<MetaGraphCell> graph_builder(
+			*builder, config.num_cells,
+			[] () {return new MetaGraphCell;}
+			);
 	graph_builder.build(model);
 	delete builder;
 }

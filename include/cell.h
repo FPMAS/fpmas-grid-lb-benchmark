@@ -96,18 +96,18 @@ class MetaGraphCell :
 };
 
 struct UtilityFunction {
-	virtual float utility(Attractor attractor, DiscretePoint point) const = 0;
+	virtual float utility(GridAttractor attractor, DiscretePoint point) const = 0;
 
 	virtual ~UtilityFunction() {
 	}
 };
 
 struct UniformUtility : public UtilityFunction {
-	float utility(Attractor attractor, DiscretePoint point) const override;
+	float utility(GridAttractor attractor, DiscretePoint point) const override;
 };
 
 struct LinearUtility : public UtilityFunction {
-	float utility(Attractor attractor, DiscretePoint point) const override;
+	float utility(GridAttractor attractor, DiscretePoint point) const override;
 };
 
 class InverseUtility : public UtilityFunction {
@@ -131,22 +131,22 @@ class InverseUtility : public UtilityFunction {
 		InverseUtility(float offset) : offset(offset) {
 		}
 
-		float utility(Attractor attractor, DiscretePoint point) const override;
+		float utility(GridAttractor attractor, DiscretePoint point) const override;
 };
 
 struct StepUtility : public UtilityFunction {
-	float utility(Attractor attractor, DiscretePoint point) const override;
+	float utility(GridAttractor attractor, DiscretePoint point) const override;
 };
 
 
 class MetaGridCellFactory : public fpmas::api::model::GridCellFactory<MetaGridCell> {
 	public:
 		const UtilityFunction& utility_function;
-		std::vector<Attractor> attractors;
+		std::vector<GridAttractor> attractors;
 
 		MetaGridCellFactory(
 				const UtilityFunction& utility_function,
-				std::vector<Attractor> attractors
+				std::vector<GridAttractor> attractors
 				) : utility_function(utility_function), attractors(attractors) {
 		}
 

@@ -15,6 +15,15 @@ GraphConfig::GraphConfig(YAML::Node config) {
 			LOAD_YAML_CONFIG_0(output_degree, unsigned int);
 	}
 	LOAD_YAML_CONFIG_0_OPTIONAL(cell_weight, float, 1.0f);
+	LOAD_YAML_CONFIG_0_OPTIONAL(utility, Utility, Utility::UNIFORM);
+	if(this->utility != Utility::UNIFORM)
+		switch(this->environment) {
+			case Environment::GRID:
+				LOAD_YAML_CONFIG_0(grid_attractors, std::vector<GridAttractor>);
+				break;
+			default:
+				LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
+		}
 }
 
 BenchmarkConfig::BenchmarkConfig(const GraphConfig& graph_config)
@@ -24,7 +33,6 @@ BenchmarkConfig::BenchmarkConfig(const GraphConfig& graph_config)
 BenchmarkConfig::BenchmarkConfig(YAML::Node config) : GraphConfig(config) {
 	LOAD_YAML_CONFIG_0(occupation_rate, float);
 	LOAD_YAML_CONFIG_0(num_steps, fpmas::api::scheduler::TimeStep);
-	LOAD_YAML_CONFIG_0_OPTIONAL(utility, Utility, Utility::UNIFORM);
 	if(this->occupation_rate > 0.0) {
 		LOAD_YAML_CONFIG_0_OPTIONAL(agent_weight, float, 1.0f);
 		LOAD_YAML_CONFIG_0_OPTIONAL(
@@ -41,8 +49,6 @@ BenchmarkConfig::BenchmarkConfig(YAML::Node config) : GraphConfig(config) {
 			MetaAgentBase, move_policy, MovePolicy, MovePolicy::RANDOM);
 	LOAD_YAML_CONFIG_1_OPTIONAL(
 			MetaAgentBase, range_size, unsigned int, (std::size_t) 1);
-	if(this->utility != Utility::UNIFORM)
-		LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
 	LOAD_YAML_CONFIG_0(test_cases, std::vector<TestCaseConfig>);
 }
 
@@ -213,6 +219,19 @@ namespace YAML {
 	}
 
 	Node convert<Attractor>::encode(const Attractor& attractor) {
+		Node node(attractor.radius);
+		return node;
+	}
+
+	bool convert<Attractor>::decode(const Node &node, Attractor& attractor) {
+		if(!node.IsScalar())
+			return false;
+
+		attractor.radius = node.as<float>();
+		return true;
+	}
+
+	Node convert<GridAttractor>::encode(const GridAttractor& attractor) {
 		Node point;
 		point.push_back(attractor.center.x);
 		point.push_back(attractor.center.y);
@@ -223,7 +242,7 @@ namespace YAML {
 		return node;
 	}
 
-	bool convert<Attractor>::decode(const Node &node, Attractor& attractor) {
+	bool convert<GridAttractor>::decode(const Node &node, GridAttractor& attractor) {
 		// The root node contains 2 elements
 		if(!node.IsSequence() || node.size() != 2)
 			return false;
