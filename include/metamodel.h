@@ -22,7 +22,8 @@ class BasicMetaModel {
 template<typename BaseModel, typename AgentType>
 class MetaModel : public BasicMetaModel {
 	private:
-		Behavior<MetaGridCell> cell_behavior {
+		fpmas::model::IdleBehavior idle_behavior;
+		Behavior<MetaSpatialCell> cell_behavior {
 			&MetaGridCell::update_edge_weights
 		};
 		Behavior<AgentType> create_relations_from_neighborhood {
@@ -111,7 +112,12 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 	agents_output(*this, this->name, config.grid_width, config.grid_height),
 	dot_output(*this, this->name + ".%t"),
 	config(config) {
-		auto& cell_group = model.buildGroup(CELL_GROUP, cell_behavior);
+		fpmas::api::model::Behavior* _cell_behavior = &idle_behavior;
+		if(config.dynamic_cell_edge_weights)
+			_cell_behavior = &cell_behavior;
+		auto& cell_group = model.buildGroup(
+				CELL_GROUP,
+				*_cell_behavior);
 		auto& create_relations_neighbors_group = model.buildGroup(
 				RELATIONS_FROM_NEIGHBORS_GROUP, create_relations_from_neighborhood
 				);

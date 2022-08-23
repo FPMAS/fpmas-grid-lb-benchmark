@@ -15,6 +15,8 @@ GraphConfig::GraphConfig(YAML::Node config) {
 			LOAD_YAML_CONFIG_0(output_degree, unsigned int);
 	}
 	LOAD_YAML_CONFIG_0_OPTIONAL(cell_weight, float, 1.0f);
+	LOAD_YAML_CONFIG_0_OPTIONAL(dynamic_cell_edge_weights, bool, false);
+	LOAD_YAML_CONFIG_1_OPTIONAL(MetaSpatialCell, cell_edge_weight, float, 1.0f);
 	LOAD_YAML_CONFIG_0_OPTIONAL(utility, Utility, Utility::UNIFORM);
 	if(this->utility != Utility::UNIFORM)
 		switch(this->environment) {
@@ -41,7 +43,7 @@ BenchmarkConfig::BenchmarkConfig(YAML::Node config) : GraphConfig(config) {
 		if(this->agent_interactions == AgentInteractions::CONTACTS) {
 			LOAD_YAML_CONFIG_0(refresh_local_contacts, fpmas::api::scheduler::TimeStep);
 			LOAD_YAML_CONFIG_0(refresh_distant_contacts, fpmas::api::scheduler::TimeStep);
-			LOAD_YAML_CONFIG_1(MetaAgentBase, contact_weight, float);
+			LOAD_YAML_CONFIG_1_OPTIONAL(MetaAgentBase, contact_weight, float, 1.0f);
 			LOAD_YAML_CONFIG_1(MetaAgentBase, max_contacts, unsigned int);
 		}
 	}

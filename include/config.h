@@ -68,6 +68,7 @@ struct GraphConfig {
 	std::size_t output_degree;
 	float p;
 	float cell_weight = 1.0f;
+	bool dynamic_cell_edge_weights = false;
 	Utility utility = Utility::UNIFORM;
 	std::vector<Attractor> attractors;
 	std::vector<GridAttractor> grid_attractors;

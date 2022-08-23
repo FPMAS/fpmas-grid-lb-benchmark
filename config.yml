@@ -24,6 +24,10 @@ agent_interactions: LOCAL
 
 # BenchmarkCells node weight
 cell_weight: 1.
+# If enabled, update weight of edges between cells (CELL_SUCCESSORs) according
+# to the count of agents currently located in the cell
+dynamic_cell_edge_weights: false
+
 # BenchmarkAgents node weight
 agent_weight: 1.
 

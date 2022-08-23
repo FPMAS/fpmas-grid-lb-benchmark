@@ -1,9 +1,9 @@
 #include "agent.h"
 
 std::size_t MetaAgentBase::max_contacts;
-std::size_t MetaAgentBase::range_size;
-float MetaAgentBase::contact_weight;
-MovePolicy MetaAgentBase::move_policy;
+std::size_t MetaAgentBase::range_size = 1;
+float MetaAgentBase::contact_weight = 1.0f;
+MovePolicy MetaAgentBase::move_policy = MovePolicy::RANDOM;
 
 std::deque<DistributedId>& MetaAgentBase::contacts() {
 	return _contacts;

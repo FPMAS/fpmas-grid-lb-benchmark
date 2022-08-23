@@ -29,6 +29,8 @@ class MetaCell {
 
 class MetaSpatialCell : public MetaCell {
 	public:
+		static float cell_edge_weight;
+
 		void update_edge_weights();
 
 		using MetaCell::MetaCell;

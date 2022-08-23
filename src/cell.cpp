@@ -1,11 +1,13 @@
 #include "cell.h"
 #include "fpmas/api/model/spatial/spatial_model.h"
 
+float MetaSpatialCell::cell_edge_weight = 1.0f;
+
 void MetaSpatialCell::update_edge_weights() {
 	std::size_t agent_count
 		= this->node()->getIncomingEdges(fpmas::api::model::LOCATION).size();
 	for(auto edge : this->node()->getOutgoingEdges(fpmas::api::model::CELL_SUCCESSOR))
-		edge->setWeight(agent_count);
+		edge->setWeight(cell_edge_weight + agent_count);
 };
 
 float UniformUtility::utility(GridAttractor, DiscretePoint) const {
