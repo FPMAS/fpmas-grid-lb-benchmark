@@ -128,9 +128,9 @@ void DotOutput::dump() {
 			file
 				<< "style=filled,"
 				<< "fillcolor=\"" << rgb_color_with_alpha(
-						set19_color_scheme[node.rank], node.utility
+						set19_color_scheme[node.rank%9], node.utility
 						) << "\","
-				<< "color=\"" << set19_color_scheme[node.rank] << "\""
+				<< "color=\"" << set19_color_scheme[node.rank%9] << "\""
 				<< "];" << std::endl;
 		}
 		for(auto& edge : edges) {
