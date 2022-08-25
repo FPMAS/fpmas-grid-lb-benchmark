@@ -43,7 +43,9 @@ int main(int argc, char** argv) {
 	app.add_option("config_file", config_file, "Graph stats YAML configuration file")
 		->required();
 	unsigned long seed = fpmas::random::default_seed;
+	bool init_only = false;
 	app.add_option("-s,--seed", seed, "Random seed");
+	app.add_flag("-i,--init-only", init_only, "If set, only performs initialization without computing graph stats.");
 
 	CLI11_PARSE(app, argc, argv);
 
@@ -68,8 +70,6 @@ int main(int argc, char** argv) {
 			BenchmarkConfig benchmark_config(graph_config);
 			// No agents
 			benchmark_config.occupation_rate = 0.0;
-			// 1 step, to launch Zoltan load balancing
-			benchmark_config.num_steps = 1;
 			// Build cells with a uniform utility, even if unused
 			benchmark_config.utility = Utility::UNIFORM;
 			// Default cell weight
@@ -89,11 +89,13 @@ int main(int argc, char** argv) {
 					env_name, benchmark_config, scheduler, runtime, zoltan_lb, 1);
 			delete model_factory;
 
-			// A DOT output it automatically performed
-			model->init()->run();
+			// A DOT output is automatically performed
+			model->init();
+			model->getDotOutput().dump();
 
-			// CSV output = Clustering coefficient and characteristic path length
-			graph_stats_output(*model, env_name + ".csv");
+			if(!init_only)
+				// CSV output = Clustering coefficient and characteristic path length
+				graph_stats_output(*model, env_name + ".csv");
 
 			delete model;
 		}
