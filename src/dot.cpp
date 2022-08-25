@@ -54,7 +54,7 @@ void DotOutput::dump() {
 		} else {
 			nodes.push_back({
 					cell->node()->getId(), cell->node()->location(),
-					dynamic_cast<MetaCell*>(located_cell)->getUtility()
+					dynamic_cast<MetaCell*>(cell)->getUtility()
 					});
 		}
 		for(auto& edge : cell->node()->getOutgoingEdges(fpmas::api::model::CELL_SUCCESSOR)) {
