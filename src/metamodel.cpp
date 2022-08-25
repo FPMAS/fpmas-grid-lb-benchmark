@@ -77,6 +77,8 @@ void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
 			);
 	graph_builder.build(model);
 	delete builder;
+
+	GraphRange<MetaGraphCell>::synchronize(model);
 }
 
 void MetaGraphModel::buildAgents(const BenchmarkConfig& config) {
