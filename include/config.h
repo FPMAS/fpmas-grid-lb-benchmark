@@ -72,6 +72,8 @@ struct GraphConfig {
 	Utility utility = Utility::UNIFORM;
 	std::vector<Attractor> attractors;
 	std::vector<GridAttractor> grid_attractors;
+	bool json_output = false;
+	bool dot_output = false;
 
 	template<typename T>
 		void load_config_optional(

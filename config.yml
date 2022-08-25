@@ -63,3 +63,6 @@ test_cases:
   - [GRID_LB, [1, 10]]
   - [ZOLTAN_CELL_LB, [1, 10, 50]]
   - [RANDOM_LB, [50]]
+
+json_output: false
+dot_output: false

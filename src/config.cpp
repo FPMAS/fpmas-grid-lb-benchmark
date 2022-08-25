@@ -26,6 +26,8 @@ GraphConfig::GraphConfig(YAML::Node config) {
 			default:
 				LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
 		}
+	LOAD_YAML_CONFIG_0_OPTIONAL(json_output, bool, false);
+	LOAD_YAML_CONFIG_0_OPTIONAL(dot_output, bool, false);
 }
 
 BenchmarkConfig::BenchmarkConfig(const GraphConfig& graph_config)

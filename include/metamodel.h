@@ -157,14 +157,15 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 			= ((config.num_steps-1) / lb_period) * lb_period;
 		// Clears distant nodes
 		scheduler.schedule(last_lb_date + 0.01, sync_graph);
-		if(config.environment == Environment::GRID)
+		if(config.json_output && config.environment == Environment::GRID)
 			// JSON cell output
 			scheduler.schedule(last_lb_date + 0.02, cells_output.job());
-		if(config.occupation_rate > 0.0)
+		if(config.json_output && config.occupation_rate > 0.0)
 			// JSON agent output
 			scheduler.schedule(last_lb_date + 0.03, agents_output.job());
-		// Dot output
-		scheduler.schedule(last_lb_date + 0.04, dot_output.job());
+		if(config.dot_output)
+			// Dot output
+			scheduler.schedule(last_lb_date + 0.04, dot_output.job());
 }
 
 template<typename BaseModel, typename AgentType>

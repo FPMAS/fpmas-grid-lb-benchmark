@@ -24,7 +24,8 @@ void MetaGridModel::buildCells(const BenchmarkConfig& config) {
 			cell_factory, config.grid_width, config.grid_height);
 
 	auto local_cells = grid.build(model, {model.getGroup(CELL_GROUP)});
-	dump_grid(config.grid_width, config.grid_height, local_cells);
+	if(config.json_output)
+		dump_grid(config.grid_width, config.grid_height, local_cells);
 }
 
 void MetaGridModel::buildAgents(const BenchmarkConfig& config) {
