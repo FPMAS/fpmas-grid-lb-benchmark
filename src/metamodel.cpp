@@ -48,10 +48,8 @@ void MetaGridModel::buildAgents(const BenchmarkConfig& config) {
 }
 
 struct MetaGraphCellFactory {
-
-
 	MetaGraphCell* operator()() {
-
+		return new MetaGraphCell(1.0f);
 	}
 };
 
@@ -72,9 +70,10 @@ void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
 			// Grid type
 			break;
 	}
+	MetaGraphCellFactory graph_cell_factory;
 	SpatialGraphBuilder<MetaGraphCell> graph_builder(
 			*builder, config.num_cells,
-			[] () {return new MetaGraphCell;}
+			graph_cell_factory
 			);
 	graph_builder.build(model);
 	delete builder;

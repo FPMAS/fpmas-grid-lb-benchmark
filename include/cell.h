@@ -12,8 +12,7 @@ class MetaCell {
 
 	public:
 		// For edge migration optimization purpose only
-		MetaCell() {
-		}
+		MetaCell() = default;
 
 		// For JSON serialization
 		MetaCell(float utility)
