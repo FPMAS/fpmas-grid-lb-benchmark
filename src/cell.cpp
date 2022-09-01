@@ -10,6 +10,8 @@ void MetaSpatialCell::update_edge_weights() {
 		edge->setWeight(cell_edge_weight + agent_count);
 };
 
+fpmas::random::DistributedGenerator<> MetaGraphCell::_rd;
+
 float UniformUtility::utility(GridAttractor, DiscretePoint) const {
 	return 1.f;
 }

@@ -22,6 +22,7 @@ FetchContent_MakeAvailable(yaml-cpp cli11)
 add_library(fpmas-metamodel-lib
 	src/agent.cpp
 	src/cell.cpp
+	src/interactions.cpp
 	src/probe.cpp
 	src/metamodel.cpp
 	src/config.cpp

@@ -1,7 +1,9 @@
 #include "metamodel.h"
 #include "fpmas/model/spatial/graph_builder.h"
+#include <fpmas/model/spatial/analysis.h>
 #include <fpmas/model/spatial/spatial_model.h>
 #include <fpmas/random/distribution.h>
+#include <fpmas/random/random.h>
 
 void MetaGridModel::buildCells(const BenchmarkConfig& config) {
 	std::unique_ptr<UtilityFunction> utility_function;
@@ -75,7 +77,13 @@ void MetaGraphModel::buildCells(const BenchmarkConfig& config) {
 			*builder, config.num_cells,
 			graph_cell_factory
 			);
-	graph_builder.build(model);
+	fpmas::api::model::GroupList cell_groups;
+	if(config.dynamic_cell_edge_weights)
+		cell_groups.push_back(model.getGroup(UPDATE_CELL_EDGE_WEIGHTS_GROUP));
+	if(config.cell_interactions != Interactions::NONE)
+		cell_groups.push_back(model.getGroup(CELL_GROUP));
+	graph_builder.build(model, cell_groups);
+
 	delete builder;
 
 	GraphRange<MetaGraphCell>::synchronize(model);

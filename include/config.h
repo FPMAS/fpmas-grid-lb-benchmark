@@ -10,6 +10,7 @@ FPMAS_DEFINE_GROUPS(
 		RELATIONS_FROM_CONTACTS_GROUP,
 		HANDLE_NEW_CONTACTS_GROUP,
 		MOVE_GROUP,
+		UPDATE_CELL_EDGE_WEIGHTS_GROUP,
 		CELL_GROUP);
 #define AGENT_GROUP MOVE_GROUP
 
@@ -45,6 +46,10 @@ enum class AgentInteractions {
 	LOCAL, CONTACTS
 };
 
+enum class Interactions {
+	NONE, READ_ALL, READ_ONE, READ_ALL_WRITE_ONE, READ_ALL_WRITE_ALL, WRITE_ALL, WRITE_ONE
+};
+
 struct Attractor {
 	float radius;
 };
@@ -72,6 +77,7 @@ struct GraphConfig {
 	Utility utility = Utility::UNIFORM;
 	std::vector<Attractor> attractors;
 	std::vector<GridAttractor> grid_attractors;
+	Interactions cell_interactions = Interactions::NONE;
 	bool json_output = false;
 	bool dot_output = false;
 
@@ -164,6 +170,13 @@ namespace YAML {
 			static Node encode(const AgentInteractions& rhs);
 			static bool decode(const Node& node, AgentInteractions& rhs);
 		};
+
+	template<>
+		struct convert<Interactions> {
+			static Node encode(const Interactions& rhs);
+			static bool decode(const Node& node, Interactions& rhs);
+		};
+
 
 	template<>
 		struct convert<Attractor> {

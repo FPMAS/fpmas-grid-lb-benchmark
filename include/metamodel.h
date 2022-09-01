@@ -20,13 +20,33 @@ class BasicMetaModel {
 		}
 };
 
-template<typename BaseModel, typename AgentType>
+template<typename BaseModel, typename _CellType, typename AgentType>
 class MetaModel : public BasicMetaModel {
 	private:
-		fpmas::model::IdleBehavior idle_behavior;
-		Behavior<MetaSpatialCell> cell_behavior {
-			&MetaGridCell::update_edge_weights
+		// Cell behaviors
+		Behavior<MetaSpatialCell> cell_update_edge_weights_behavior {
+			&MetaSpatialCell::update_edge_weights
 		};
+		Behavior<MetaSpatialCell> cell_read_all_cell_behavior {
+			&MetaSpatialCell::read_all_cell
+		};
+		Behavior<MetaSpatialCell> cell_write_all_cell_behavior {
+			&MetaSpatialCell::write_all_cell
+		};
+		Behavior<MetaSpatialCell> cell_read_one_cell_behavior {
+			&MetaSpatialCell::read_one_cell
+		};
+		Behavior<MetaSpatialCell> cell_write_one_cell_behavior {
+			&MetaSpatialCell::write_one_cell
+		};
+		Behavior<MetaSpatialCell> cell_read_all_write_one_cell_behavior {
+			&MetaSpatialCell::read_all_write_one_cell
+		};
+		Behavior<MetaSpatialCell> cell_read_all_write_all_cell_behavior {
+			&MetaSpatialCell::read_all_write_all_cell
+		};
+
+		// Agent behaviors
 		Behavior<AgentType> create_relations_from_neighborhood {
 			&AgentType::create_relations_from_neighborhood
 		};
@@ -47,12 +67,14 @@ class MetaModel : public BasicMetaModel {
 
 
 	public:
+		typedef _CellType CellType;
 		BaseModel model;
 		std::string name;
 		LoadBalancingProbe lb_probe;
 
 	private:
 		LoadBalancingCsvOutput csv_output;
+		CountersCsvOutput counters_csv_output;
 		CellsOutput cells_output;
 		AgentsOutput agents_output;
 		DotOutput dot_output;
@@ -71,7 +93,7 @@ class MetaModel : public BasicMetaModel {
 				fpmas::scheduler::TimeStep lb_period
 				);
 
-		MetaModel<BaseModel, AgentType>* init() override;
+		MetaModel<BaseModel, _CellType, AgentType>* init() override;
 
 		void run() override {
 			model.runtime().run(config.num_steps);
@@ -102,8 +124,8 @@ class MetaModel : public BasicMetaModel {
 		}
 };
 
-template<typename BaseModel, typename AgentType>
-MetaModel<BaseModel, AgentType>::MetaModel(
+template<typename BaseModel, typename _CellType, typename AgentType>
+MetaModel<BaseModel, _CellType, AgentType>::MetaModel(
 		std::string name, BenchmarkConfig config,
 		fpmas::api::scheduler::Scheduler& scheduler,
 		fpmas::api::runtime::Runtime& runtime,
@@ -112,17 +134,52 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 		) :
 	name(name),
 	model(scheduler, runtime, lb_algorithm),
-	lb_probe(model.graph(), lb_algorithm), csv_output(*this),
+	lb_probe(model.graph(), lb_algorithm), csv_output(*this), counters_csv_output(*this),
 	cells_output(*this, this->name, config.grid_width, config.grid_height),
 	agents_output(*this, this->name, config.grid_width, config.grid_height),
 	dot_output(*this, this->name + ".%t"),
 	config(config) {
-		fpmas::api::model::Behavior* _cell_behavior = &idle_behavior;
-		if(config.dynamic_cell_edge_weights)
-			_cell_behavior = &cell_behavior;
-		auto& cell_group = model.buildGroup(
-				CELL_GROUP,
-				*_cell_behavior);
+		switch(config.cell_interactions) {
+			case Interactions::READ_ALL:
+				model.buildGroup(
+						CELL_GROUP,
+						cell_read_all_cell_behavior
+						);
+				break;
+			case Interactions::WRITE_ALL:
+				model.buildGroup(
+						CELL_GROUP,
+						cell_write_all_cell_behavior
+						);
+				break;
+			case Interactions::READ_ONE:
+				model.buildGroup(
+						CELL_GROUP,
+						cell_read_one_cell_behavior
+						);
+				break;
+			case Interactions::WRITE_ONE:
+				model.buildGroup(
+						CELL_GROUP,
+						cell_write_one_cell_behavior
+						);
+				break;
+			case Interactions::READ_ALL_WRITE_ONE:
+				model.buildGroup(
+						CELL_GROUP,
+						cell_read_all_write_one_cell_behavior
+						);
+				break;
+			case Interactions::READ_ALL_WRITE_ALL:
+				model.buildGroup(
+						CELL_GROUP,
+						cell_read_all_write_all_cell_behavior
+						);
+				break;
+
+			default:
+				break;
+		}
 		auto& create_relations_neighbors_group = model.buildGroup(
 				RELATIONS_FROM_NEIGHBORS_GROUP, create_relations_from_neighborhood
 				);
@@ -155,8 +212,18 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 			}
 			scheduler.schedule(0.23, 1, move_group.jobs());
 		}
-		scheduler.schedule(0.24, 1, cell_group.jobs());
-		scheduler.schedule(0.3, 1, csv_output.job());
+		if(config.dynamic_cell_edge_weights) {
+			auto& update_cell_edge_weights_group = model.buildGroup(
+					UPDATE_CELL_EDGE_WEIGHTS_GROUP,
+					cell_update_edge_weights_behavior);
+			scheduler.schedule(0.24, 1, update_cell_edge_weights_group.jobs());
+		}
+		
+		if(config.cell_interactions != Interactions::NONE) {
+			scheduler.schedule(0.25, 1, model.getGroup(CELL_GROUP).jobs());
+			scheduler.schedule(0.3, 1, counters_csv_output.probeJob());
+		}
+		scheduler.schedule(0.31, 1, csv_output.job());
 
 		fpmas::scheduler::TimeStep last_lb_date
 			= ((config.num_steps-1) / lb_period) * lb_period;
@@ -173,14 +240,14 @@ MetaModel<BaseModel, AgentType>::MetaModel(
 			scheduler.schedule(last_lb_date + 0.04, dot_output.job());
 }
 
-template<typename BaseModel, typename AgentType>
-MetaModel<BaseModel, AgentType>* MetaModel<BaseModel, AgentType>::init() {
+template<typename BaseModel, typename _CellType, typename AgentType>
+MetaModel<BaseModel, _CellType, AgentType>* MetaModel<BaseModel, _CellType, AgentType>::init() {
 	buildCells(config);
 	model.graph().synchronize();
 
 	buildAgents(config);
 	// Static node weights
-	for(auto cell : model.getGroup(CELL_GROUP).localAgents())
+	for(auto cell : model.cellGroup().localAgents())
 		cell->node()->setWeight(config.cell_weight);
 	for(auto agent : model.getGroup(AGENT_GROUP).localAgents())
 		agent->node()->setWeight(config.agent_weight);
@@ -193,12 +260,12 @@ MetaModel<BaseModel, AgentType>* MetaModel<BaseModel, AgentType>::init() {
 class MetaGridModel :
 	public MetaModel<
 		GridModel<fpmas::synchro::GhostMode, MetaGridCell>,
-		MetaGridAgent
+		MetaGridCell, MetaGridAgent
 	> {
 		public:
 			using MetaModel<
 				GridModel<fpmas::synchro::GhostMode, MetaGridCell>,
-				MetaGridAgent
+				MetaGridCell, MetaGridAgent
 					>::MetaModel;
 
 			void buildCells(const BenchmarkConfig& config) override;
@@ -208,12 +275,13 @@ class MetaGridModel :
 class MetaGraphModel :
 	public MetaModel<
 		SpatialModel<fpmas::synchro::GhostMode, MetaGraphCell>,
-		MetaGraphAgent
+		MetaGraphCell, MetaGraphAgent
 	> {
-		using MetaModel<
-			SpatialModel<fpmas::synchro::GhostMode, MetaGraphCell>,
-			MetaGraphAgent
-				>::MetaModel;
+		public:
+			using MetaModel<
+				SpatialModel<fpmas::synchro::GhostMode, MetaGraphCell>,
+				MetaGraphCell, MetaGraphAgent
+					>::MetaModel;
 
 			void buildCells(const BenchmarkConfig& config) override;
 			void buildAgents(const BenchmarkConfig& config) override;

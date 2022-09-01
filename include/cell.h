@@ -1,8 +1,7 @@
 #pragma once
 
-#include "fpmas.h"
 #include "config.h"
-#include <fpmas/api/model/model.h>
+#include "interactions.h"
 
 using namespace fpmas::model;
 
@@ -31,6 +30,12 @@ class MetaSpatialCell : public MetaCell {
 		static float cell_edge_weight;
 
 		void update_edge_weights();
+		virtual void read_all_cell() = 0;
+		virtual void read_one_cell() = 0;
+		virtual void write_all_cell() = 0;
+		virtual void write_one_cell() = 0;
+		virtual void read_all_write_one_cell() = 0;
+		virtual void read_all_write_all_cell() = 0;
 
 		using MetaCell::MetaCell;
 };
@@ -56,9 +61,26 @@ struct CellSerialization {
 	}
 
 	static CellType* from_datapack(const fpmas::io::datapack::ObjectPack& o) {
-		return new CellType(o.get<float>());
+		float utility = o.get<float>();
+		return new CellType(utility);
 	}
 };
+
+#define IMPLEM_CELL_INTERACTION(INTERACTION, CELL_TYPE)\
+	void INTERACTION##_cell() override {\
+		auto neighbors = this->outNeighbors<CELL_TYPE>(fpmas::api::model::CELL_SUCCESSOR);\
+		ReaderWriter<CELL_TYPE, CELL_TYPE>::INTERACTION(\
+				this, neighbors\
+				);\
+	}
+
+#define IMPLEM_CELL_INTERACTIONS(CELL_TYPE)\
+	IMPLEM_CELL_INTERACTION(read_all, CELL_TYPE)\
+	IMPLEM_CELL_INTERACTION(read_one, CELL_TYPE)\
+	IMPLEM_CELL_INTERACTION(write_all, CELL_TYPE)\
+	IMPLEM_CELL_INTERACTION(write_one, CELL_TYPE)\
+	IMPLEM_CELL_INTERACTION(read_all_write_one, CELL_TYPE)\
+	IMPLEM_CELL_INTERACTION(read_all_write_all, CELL_TYPE)
 
 class MetaGridCell :
 	public MetaSpatialCell,
@@ -76,25 +98,36 @@ class MetaGridCell :
 		fpmas::api::model::AgentNode* node() override {
 			return this->GridCellBase<MetaGridCell>::node();
 		}
+
+		IMPLEM_CELL_INTERACTIONS(MetaGridCell);
+		
 };
 
 class MetaGraphCell :
 	public MetaSpatialCell,
 	public GraphCellBase<MetaGraphCell>,
 	public CellSerialization<MetaGraphCell> {
-	public:
-		// For edge migration optimization purpose only
-		using MetaSpatialCell::MetaSpatialCell;
+		private:
+			static fpmas::random::DistributedGenerator<> _rd;
+		public:
+				// For edge migration optimization purpose only
+				using MetaSpatialCell::MetaSpatialCell;
 
-		// For cell factory
-		MetaGraphCell(float utility)
-			: GraphCellBase<MetaGraphCell>(), MetaSpatialCell(utility) {
-			}
+				// For cell factory
+				MetaGraphCell(float utility)
+					: GraphCellBase<MetaGraphCell>(), MetaSpatialCell(utility) {
+					}
 
-		fpmas::api::model::AgentNode* node() override {
-			return this->GraphCellBase<MetaGraphCell>::node();
-		}
-};
+				fpmas::api::model::AgentNode* node() override {
+					return this->GraphCellBase<MetaGraphCell>::node();
+				}
+
+				fpmas::random::DistributedGenerator<>& rd() {
+					return _rd;
+				}
+
+				IMPLEM_CELL_INTERACTIONS(MetaGraphCell);
+	};
 
 struct UtilityFunction {
 	virtual float utility(GridAttractor attractor, DiscretePoint point) const = 0;

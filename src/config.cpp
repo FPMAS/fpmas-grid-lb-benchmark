@@ -1,4 +1,5 @@
 #include "agent.h"
+#include "config.h"
 
 GraphConfig::GraphConfig(YAML::Node config) {
 	LOAD_YAML_CONFIG_0(environment, Environment);
@@ -26,6 +27,7 @@ GraphConfig::GraphConfig(YAML::Node config) {
 			default:
 				LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
 		}
+	LOAD_YAML_CONFIG_0_OPTIONAL(cell_interactions, Interactions, Interactions::NONE);
 	LOAD_YAML_CONFIG_0_OPTIONAL(json_output, bool, false);
 	LOAD_YAML_CONFIG_0_OPTIONAL(dot_output, bool, false);
 }
@@ -217,6 +219,63 @@ namespace YAML {
 		}
 		if(str == "CONTACTS") {
 			agent_interactions = AgentInteractions::CONTACTS;
+			return true;
+		}
+		return false;
+	}
+
+	Node convert<Interactions>::encode(
+			const Interactions& interactions) {
+		switch(interactions) {
+			case Interactions::NONE:
+				return Node("NONE");
+			case Interactions::READ_ALL:
+				return Node("READ_ALL");
+			case Interactions::READ_ONE:
+				return Node("READ_ONE");
+			case Interactions::READ_ALL_WRITE_ONE:
+				return Node("READ_ALL_WRITE_ONE");
+			case Interactions::READ_ALL_WRITE_ALL:
+				return Node("READ_ALL_WRITE_ONE");
+			case Interactions::WRITE_ALL:
+				return Node("WRITE_ALL");
+			case Interactions::WRITE_ONE:
+				return Node("WRITE_ONE");
+			default:
+				return Node();
+		}
+	}
+
+	bool convert<Interactions>::decode(
+			const Node &node,
+			Interactions &interactions) {
+		std::string str = node.as<std::string>();
+		if(str == "NONE") {
+			interactions = Interactions::NONE;
+			return true;
+		}
+		if(str == "READ_ALL") {
+			interactions = Interactions::READ_ALL;
+			return true;
+		}
+		if(str == "READ_ONE") {
+			interactions = Interactions::READ_ONE;
+			return true;
+		}
+		if(str == "READ_ALL_WRITE_ONE") {
+			interactions = Interactions::READ_ALL_WRITE_ONE;
+			return true;
+		}
+		if(str == "READ_ALL_WRITE_ALL") {
+			interactions = Interactions::READ_ALL_WRITE_ALL;
+			return true;
+		}
+		if(str == "WRITE_ALL") {
+			interactions = Interactions::WRITE_ALL;
+			return true;
+		}
+		if(str == "WRITE_ONE") {
+			interactions = Interactions::WRITE_ONE;
 			return true;
 		}
 		return false;

@@ -1,4 +1,24 @@
+#include "interactions.h"
 #include "metamodel.h"
+
+CountersCsvOutput::CommitProbesTask::CommitProbesTask(
+		const std::vector<fpmas::api::utils::perf::Probe*>& probes,
+		fpmas::api::utils::perf::Monitor& monitor)
+	: probes(probes), monitor(monitor) {
+	}
+
+void CountersCsvOutput::CommitProbesTask::run() {
+	for(auto probe : probes)
+		monitor.commit(*probe);
+}
+
+CountersCsvOutput::ClearMonitorTask::ClearMonitorTask(
+		fpmas::api::utils::perf::Monitor& monitor): monitor(monitor) {
+}
+
+void CountersCsvOutput::ClearMonitorTask::run() {
+	monitor.clear();
+}
 
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,
@@ -114,6 +134,39 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
 ) {
 }
 
+CountersCsvOutput::CountersCsvOutput(
+		BasicMetaModel& metamodel,
+		fpmas::api::utils::perf::Probe& read_probe,
+		fpmas::api::utils::perf::Probe& write_probe,
+		fpmas::api::utils::perf::Monitor& monitor
+		) :
+	fpmas::io::FileOutput(metamodel.getName() + "_counters.csv"),
+	fpmas::io::DistributedCsvOutput<
+	fpmas::io::Local<fpmas::scheduler::Date>, // Time Step
+	fpmas::io::Reduce<unsigned int>, // Cell->Cell read counters
+	fpmas::io::Reduce<unsigned int> // Cell->Cell write counters
+	>(
+			fpmas::communication::WORLD, 0, *this,
+			{"T", [&metamodel] {return metamodel.getModel().runtime().currentDate();}},
+			{"CELL_CELL_READ", [&monitor] {
+			return std::chrono::duration_cast<std::chrono::microseconds>(
+					monitor.totalDuration("READ")
+					).count();
+			}},
+			{"CELL_CELL_WRITE", [&monitor] {
+			return std::chrono::duration_cast<std::chrono::microseconds>(
+					monitor.totalDuration("WRITE")
+					).count();
+			}}
+	 ),
+	commit_probes_task({&read_probe,&write_probe}, monitor),
+	clear_monitor_task(monitor) {
+		probe_job.setBeginTask(commit_probes_task);
+		for(auto& task : this->job().tasks())
+			probe_job.add(*task);
+		probe_job.setEndTask(clear_monitor_task);
+	}
+	
 CellsOutput::CellsOutput(BasicMetaModel& meta_model,
 		std::string filename,
 		std::size_t grid_width, std::size_t grid_height
