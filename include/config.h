@@ -50,6 +50,10 @@ enum class Interactions {
 	NONE, READ_ALL, READ_ONE, READ_ALL_WRITE_ONE, READ_ALL_WRITE_ALL, WRITE_ALL, WRITE_ONE
 };
 
+enum class SyncMode {
+	GHOST_MODE, GLOBAL_GHOST_MODE, HARD_SYNC_MODE
+};
+
 struct Attractor {
 	float radius;
 };
@@ -78,6 +82,7 @@ struct GraphConfig {
 	std::vector<Attractor> attractors;
 	std::vector<GridAttractor> grid_attractors;
 	Interactions cell_interactions = Interactions::NONE;
+	SyncMode sync_mode = SyncMode::GHOST_MODE;
 	bool json_output = false;
 	bool dot_output = false;
 
@@ -177,6 +182,11 @@ namespace YAML {
 			static bool decode(const Node& node, Interactions& rhs);
 		};
 
+	template<>
+		struct convert<SyncMode> {
+			static Node encode(const SyncMode& rhs);
+			static bool decode(const Node& node, SyncMode& rhs);
+		};
 
 	template<>
 		struct convert<Attractor> {

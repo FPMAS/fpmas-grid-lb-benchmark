@@ -28,6 +28,7 @@ GraphConfig::GraphConfig(YAML::Node config) {
 				LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
 		}
 	LOAD_YAML_CONFIG_0_OPTIONAL(cell_interactions, Interactions, Interactions::NONE);
+	LOAD_YAML_CONFIG_0_OPTIONAL(sync_mode, SyncMode, SyncMode::GHOST_MODE);
 	LOAD_YAML_CONFIG_0_OPTIONAL(json_output, bool, false);
 	LOAD_YAML_CONFIG_0_OPTIONAL(dot_output, bool, false);
 }
@@ -281,6 +282,39 @@ namespace YAML {
 		return false;
 	}
 
+	Node convert<SyncMode>::encode(
+			const SyncMode& sync_mode) {
+		switch(sync_mode) {
+			case SyncMode::GHOST_MODE:
+				return Node("GHOST_MODE");
+			case SyncMode::GLOBAL_GHOST_MODE:
+				return Node("GLOBAL_GHOST_MODE");
+			case SyncMode::HARD_SYNC_MODE:
+				return Node("HARD_SYNC_MODE");
+			default:
+				return Node();
+		}
+	}
+
+	bool convert<SyncMode>::decode(
+			const Node& node,
+			SyncMode& sync_mode) {
+		std::string str = node.as<std::string>();
+		if(str == "GHOST_MODE") {
+			sync_mode = SyncMode::GHOST_MODE;
+			return true;
+		}
+		if(str == "GLOBAL_GHOST_MODE") {
+			sync_mode = SyncMode::GLOBAL_GHOST_MODE;
+			return true;
+		}
+		if(str == "HARD_SYNC_MODE") {
+			sync_mode = SyncMode::HARD_SYNC_MODE;
+			return true;
+		}
+		return false;
+	}
+		
 	Node convert<Attractor>::encode(const Attractor& attractor) {
 		Node node(attractor.radius);
 		return node;

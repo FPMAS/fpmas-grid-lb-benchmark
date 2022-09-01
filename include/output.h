@@ -2,8 +2,6 @@
 
 #include "fpmas/io/json_output.h"
 #include "agent.h"
-#include <fpmas/api/utils/perf.h>
-#include <fpmas/io/csv_output.h>
 
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,
@@ -12,7 +10,6 @@ void dump_grid(
 
 class BasicMetaModelFactory;
 class BasicMetaModel;
-class MetaGraphModel;
 
 void graph_stats_output(
 		BasicMetaModel& model,

@@ -52,15 +52,7 @@ int main(int argc, char** argv) {
 		if(!config.is_valid)
 			return EXIT_FAILURE;
 
-		BasicMetaModelFactory* model_factory;
-		switch(config.environment) {
-			case Environment::GRID:
-				model_factory = new MetaModelFactory<MetaGridModel>;
-				break;
-			default:
-				// All other graph types
-				model_factory = new MetaModelFactory<MetaGraphModel>;
-		}
+		MetaModelFactory model_factory(config.environment, config.sync_mode);
 
 		for(auto test_case : config.test_cases) {
 			for(auto lb_period : test_case.lb_periods) {
@@ -72,7 +64,7 @@ int main(int argc, char** argv) {
 						{
 							ZoltanLoadBalancing zoltan_lb(
 									fpmas::communication::WORLD, lb_period);
-							BasicMetaModel* model = model_factory->build(
+							BasicMetaModel* model = model_factory.build(
 									"zoltan_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, zoltan_lb, lb_period
 									);
@@ -87,7 +79,7 @@ int main(int argc, char** argv) {
 							ScheduledLoadBalancing scheduled_load_balancing(
 									zoltan_lb, scheduler, runtime
 									);
-							BasicMetaModel* model = model_factory->build(
+							BasicMetaModel* model = model_factory.build(
 									"scheduled_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, scheduled_load_balancing,
 									lb_period
@@ -102,7 +94,7 @@ int main(int argc, char** argv) {
 									config.grid_width, config.grid_height,
 									fpmas::communication::WORLD
 									);
-							BasicMetaModel* model = model_factory->build(
+							BasicMetaModel* model = model_factory.build(
 									"grid_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, grid_lb, lb_period
 									);
@@ -117,7 +109,7 @@ int main(int argc, char** argv) {
 							CellLoadBalancing zoltan_cell_lb(
 									fpmas::communication::WORLD, zoltan_lb
 									);
-							BasicMetaModel* model = model_factory->build(
+							BasicMetaModel* model = model_factory.build(
 									"zoltan_cell_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, zoltan_cell_lb, lb_period
 									);
@@ -129,7 +121,7 @@ int main(int argc, char** argv) {
 						{
 
 							RandomLoadBalancing random_lb(fpmas::communication::WORLD);
-							BasicMetaModel* model = model_factory->build(
+							BasicMetaModel* model = model_factory.build(
 									"random_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, random_lb, lb_period
 									);
@@ -140,7 +132,6 @@ int main(int argc, char** argv) {
 				}
 			}
 		}
-		delete model_factory;
 	}
 	fpmas::finalize();
 }

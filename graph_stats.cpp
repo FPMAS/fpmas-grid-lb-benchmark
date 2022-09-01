@@ -56,15 +56,8 @@ int main(int argc, char** argv) {
 		for(auto env_node : config) {
 			GraphConfig graph_config(env_node);
 
-			BasicMetaModelFactory* model_factory;
-			switch(graph_config.environment) {
-				case Environment::GRID:
-					model_factory = new MetaModelFactory<MetaGridModel>;
-					break;
-				default:
-					// All other graph types
-					model_factory = new MetaModelFactory<MetaGraphModel>;
-			}
+			MetaModelFactory model_factory(
+					graph_config.environment, SyncMode::GHOST_MODE);
 
 			// Building a fake BenchmarkConfig
 			BenchmarkConfig benchmark_config(graph_config);
@@ -85,9 +78,8 @@ int main(int argc, char** argv) {
 			// Perform a Zoltan load balancing to ensure the stats computing
 			// process is balanced
 			fpmas::model::ZoltanLoadBalancing zoltan_lb(fpmas::communication::WORLD);
-			auto* model = model_factory->build(
+			auto* model = model_factory.build(
 					env_name, benchmark_config, scheduler, runtime, zoltan_lb, 1);
-			delete model_factory;
 
 			// A DOT output is automatically performed
 			model->init();

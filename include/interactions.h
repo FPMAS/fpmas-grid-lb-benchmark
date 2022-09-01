@@ -1,9 +1,6 @@
 #pragma once
 #include "fpmas.h"
-#include <fpmas/model/model.h>
-#include <fpmas/random/distribution.h>
-#include <fpmas/random/generator.h>
-#include <fpmas/utils/perf.h>
+#include "fpmas/utils/perf.h"
 
 template<typename SourceAgent, typename TargetAgent>
 struct ReaderWriter {
