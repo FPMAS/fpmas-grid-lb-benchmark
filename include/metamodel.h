@@ -9,7 +9,6 @@
 class BasicMetaModel {
 	public:
 		virtual std::string getName() const = 0;
-		virtual LoadBalancingProbe& getLoadBalancingProbe() = 0;
 		virtual fpmas::api::model::Model& getModel() = 0;
 		virtual fpmas::api::model::AgentGroup& cellGroup() = 0;
 		virtual fpmas::api::model::AgentGroup& agentGroup() = 0;
@@ -22,7 +21,7 @@ class BasicMetaModel {
 		}
 };
 
-template<typename BaseModel, typename _CellType, typename AgentType>
+template<typename BaseModel, typename CellType, typename AgentType>
 class MetaModel : public BasicMetaModel {
 	private:
 		// Cell behaviors
@@ -67,16 +66,21 @@ class MetaModel : public BasicMetaModel {
 				};
 		fpmas::scheduler::Job sync_graph {{sync_graph_task}};
 
-
-	public:
-		typedef _CellType CellType;
+	protected:
 		BaseModel model;
-		std::string name;
-		LoadBalancingProbe lb_probe;
 
 	private:
+		std::string name;
+		fpmas::utils::perf::Monitor monitor;
+
+		fpmas::utils::perf::Probe balance_probe {"BALANCE"};
+		fpmas::utils::perf::Probe sync_probe {"SYNC"};
+		fpmas::utils::perf::Probe distribute_probe {"DISTRIBUTE"};
+
+		LoadBalancingProbe lb_probe;
+		SyncProbeTask sync_probe_task;
+
 		LoadBalancingCsvOutput csv_output;
-		CountersCsvOutput counters_csv_output;
 		CellsOutput cells_output;
 		AgentsOutput agents_output;
 		DotOutput dot_output;
@@ -95,7 +99,7 @@ class MetaModel : public BasicMetaModel {
 				fpmas::scheduler::TimeStep lb_period
 				);
 
-		MetaModel<BaseModel, _CellType, AgentType>* init() override;
+		MetaModel<BaseModel, CellType, AgentType>* init() override;
 
 		void run() override {
 			model.runtime().run(config.num_steps);
@@ -103,10 +107,6 @@ class MetaModel : public BasicMetaModel {
 
 		std::string getName() const override {
 			return name;
-		}
-
-		LoadBalancingProbe& getLoadBalancingProbe() override {
-			return lb_probe;
 		}
 
 		fpmas::api::model::Model& getModel() override {
@@ -126,8 +126,8 @@ class MetaModel : public BasicMetaModel {
 		}
 };
 
-template<typename BaseModel, typename _CellType, typename AgentType>
-MetaModel<BaseModel, _CellType, AgentType>::MetaModel(
+template<typename BaseModel, typename CellType, typename AgentType>
+MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 		std::string name, BenchmarkConfig config,
 		fpmas::api::scheduler::Scheduler& scheduler,
 		fpmas::api::runtime::Runtime& runtime,
@@ -136,7 +136,16 @@ MetaModel<BaseModel, _CellType, AgentType>::MetaModel(
 		) :
 	name(name),
 	model(scheduler, runtime, lb_algorithm),
-	lb_probe(model.graph(), lb_algorithm), csv_output(*this), counters_csv_output(*this),
+	lb_probe(balance_probe, distribute_probe, model.graph(), lb_algorithm),
+	csv_output(
+			*this,
+			balance_probe,
+			distribute_probe,
+			ReaderWriter<CellType, CellType>::read_probe,
+			ReaderWriter<CellType, CellType>::write_probe,
+			sync_probe,
+			monitor),
+	sync_probe_task(sync_probe, model.graph()),
 	cells_output(*this, this->name, config.grid_width, config.grid_height),
 	agents_output(*this, this->name, config.grid_width, config.grid_height),
 	dot_output(*this, this->name + ".%t"),
@@ -222,10 +231,12 @@ MetaModel<BaseModel, _CellType, AgentType>::MetaModel(
 		}
 		
 		if(config.cell_interactions != Interactions::NONE) {
+			model.getGroup(CELL_GROUP).agentExecutionJob().setEndTask(sync_probe_task);
 			scheduler.schedule(0.25, 1, model.getGroup(CELL_GROUP).jobs());
-			scheduler.schedule(0.3, 1, counters_csv_output.probeJob());
 		}
+		scheduler.schedule(0.30, 1, csv_output.commit_probes_job);
 		scheduler.schedule(0.31, 1, csv_output.job());
+		scheduler.schedule(0.32, 1, csv_output.clear_monitor_job);
 
 		fpmas::scheduler::TimeStep last_lb_date
 			= ((config.num_steps-1) / lb_period) * lb_period;
@@ -242,8 +253,8 @@ MetaModel<BaseModel, _CellType, AgentType>::MetaModel(
 			scheduler.schedule(last_lb_date + 0.04, dot_output.job());
 }
 
-template<typename BaseModel, typename _CellType, typename AgentType>
-MetaModel<BaseModel, _CellType, AgentType>* MetaModel<BaseModel, _CellType, AgentType>::init() {
+template<typename BaseModel, typename CellType, typename AgentType>
+MetaModel<BaseModel, CellType, AgentType>* MetaModel<BaseModel, CellType, AgentType>::init() {
 	buildCells(config);
 	model.graph().synchronize();
 

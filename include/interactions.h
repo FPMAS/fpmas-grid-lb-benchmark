@@ -4,7 +4,6 @@
 
 template<typename SourceAgent, typename TargetAgent>
 struct ReaderWriter {
-	static fpmas::utils::perf::Monitor monitor;
 	static fpmas::utils::perf::Probe read_probe;
 	static fpmas::utils::perf::Probe write_probe;
 
@@ -67,9 +66,6 @@ struct ReaderWriter {
 		write_one(agent, neighbors);
 	}
 };
-
-template<typename SourceAgent, typename TargetAgent>
-fpmas::utils::perf::Monitor ReaderWriter<SourceAgent, TargetAgent>::monitor;
 
 template<typename SourceAgent, typename TargetAgent>
 fpmas::utils::perf::Probe ReaderWriter<SourceAgent, TargetAgent>::read_probe {"READ"};

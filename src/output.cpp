@@ -1,25 +1,6 @@
 #include "interactions.h"
 #include "metamodel.h"
 
-CountersCsvOutput::CommitProbesTask::CommitProbesTask(
-		const std::vector<fpmas::api::utils::perf::Probe*>& probes,
-		fpmas::api::utils::perf::Monitor& monitor)
-	: probes(probes), monitor(monitor) {
-	}
-
-void CountersCsvOutput::CommitProbesTask::run() {
-	for(auto probe : probes)
-		monitor.commit(*probe);
-}
-
-CountersCsvOutput::ClearMonitorTask::ClearMonitorTask(
-		fpmas::api::utils::perf::Monitor& monitor): monitor(monitor) {
-}
-
-void CountersCsvOutput::ClearMonitorTask::run() {
-	monitor.clear();
-}
-
 void dump_grid(
 		std::size_t grid_width, std::size_t grid_height,
 		std::vector<MetaGridCell*> local_cells) {
@@ -72,24 +53,29 @@ void graph_stats_output(
 	}
 }
 
-LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
-	:
+LoadBalancingCsvOutput::LoadBalancingCsvOutput(
+		BasicMetaModel& metamodel,
+		fpmas::api::utils::perf::Probe& balance_probe,
+		fpmas::api::utils::perf::Probe& distribute_probe,
+		fpmas::api::utils::perf::Probe& read_probe,
+		fpmas::api::utils::perf::Probe& write_probe,
+		fpmas::api::utils::perf::Probe& sync_probe,
+		fpmas::api::utils::perf::Monitor& monitor) :
 		fpmas::io::FileOutput(
 				metamodel.getName() + ".%r.csv",
 				metamodel.getModel().getMpiCommunicator().getRank()),
 		LbCsvOutput(*this,
 			{"TIME", [&metamodel] {return metamodel.getModel().runtime().currentDate();}},
-			{"BALANCE_TIME", [&metamodel] {
+			{"BALANCE_TIME", [&monitor] {
 			auto result = std::chrono::duration_cast<std::chrono::microseconds>(
-					metamodel.getLoadBalancingProbe().monitor.totalDuration("BALANCE")
+					monitor.totalDuration("BALANCE")
 					).count();
 			return result;
 			}},
-			{"DISTRIBUTE_TIME", [&metamodel] {
+			{"DISTRIBUTE_TIME", [&monitor] {
 			auto result = std::chrono::duration_cast<std::chrono::microseconds>(
-					metamodel.getLoadBalancingProbe().monitor.totalDuration("DISTRIBUTE")
+					monitor.totalDuration("DISTRIBUTE")
 					).count();
-			metamodel.getLoadBalancingProbe().monitor.clear();
 			return result;
 			}},
 			{"AGENTS", [&metamodel] {
@@ -130,24 +116,7 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(BasicMetaModel& metamodel)
 					if(edge->state() == fpmas::api::graph::DISTANT)
 						total_weight+=edge->getWeight();
 			return total_weight;
-			}}
-) {
-}
-
-CountersCsvOutput::CountersCsvOutput(
-		BasicMetaModel& metamodel,
-		fpmas::api::utils::perf::Probe& read_probe,
-		fpmas::api::utils::perf::Probe& write_probe,
-		fpmas::api::utils::perf::Monitor& monitor
-		) :
-	fpmas::io::FileOutput(metamodel.getName() + "_counters.csv"),
-	fpmas::io::DistributedCsvOutput<
-	fpmas::io::Local<fpmas::scheduler::Date>, // Time Step
-	fpmas::io::Reduce<unsigned int>, // Cell->Cell read counters
-	fpmas::io::Reduce<unsigned int> // Cell->Cell write counters
-	>(
-			fpmas::communication::WORLD, 0, *this,
-			{"T", [&metamodel] {return metamodel.getModel().runtime().currentDate();}},
+			}},
 			{"CELL_CELL_READ", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(
 					monitor.totalDuration("READ")
@@ -157,14 +126,26 @@ CountersCsvOutput::CountersCsvOutput(
 			return std::chrono::duration_cast<std::chrono::microseconds>(
 					monitor.totalDuration("WRITE")
 					).count();
+			}},
+			{"CELL_SYNC", [&monitor] {
+			return std::chrono::duration_cast<std::chrono::microseconds>(
+					monitor.totalDuration("SYNC")
+					).count();
 			}}
-	 ),
-	commit_probes_task({&read_probe,&write_probe}, monitor),
-	clear_monitor_task(monitor) {
-		probe_job.setBeginTask(commit_probes_task);
-		for(auto& task : this->job().tasks())
-			probe_job.add(*task);
-		probe_job.setEndTask(clear_monitor_task);
+), commit_probes_task([
+		&balance_probe, &distribute_probe,
+		&read_probe, &write_probe, &sync_probe,
+		&monitor
+	] () {
+	monitor.commit(balance_probe);
+	monitor.commit(distribute_probe);
+	monitor.commit(read_probe);
+	monitor.commit(write_probe);
+	monitor.commit(sync_probe);
+	}),
+	clear_monitor_task([&monitor] () {
+			monitor.clear();
+			}) {
 	}
 	
 CellsOutput::CellsOutput(BasicMetaModel& meta_model,

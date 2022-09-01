@@ -24,64 +24,31 @@ fpmas::scheduler::Date, // Time Step
 	float, // Local cells
 	float, // Distant agent->agent edges
 	float, // Distant agent->cell edges
-	float // Distant cell->cell edges
+	float, // Distant cell->cell edges
+	unsigned int, // Cell->Cell read counters
+	unsigned int, // Cell->Cell write counters
+	unsigned int // Sync time
 	> LbCsvOutput;
 
 class LoadBalancingCsvOutput :
 	public fpmas::io::FileOutput,
 	public LbCsvOutput {
-		public:
-			LoadBalancingCsvOutput(BasicMetaModel& meta_model);
-	};
-
-class CountersCsvOutput :
-	public fpmas::io::FileOutput,
-	public fpmas::io::DistributedCsvOutput<
-	fpmas::io::Local<fpmas::scheduler::Date>, // Time Step
-	fpmas::io::Reduce<unsigned int>, // Cell->Cell read counters
-	fpmas::io::Reduce<unsigned int> // Cell->Cell write counters
-	> {
 		private:
-			class CommitProbesTask : public fpmas::scheduler::TaskBase<fpmas::api::scheduler::Task> {
-				private:
-					std::vector<fpmas::api::utils::perf::Probe*> probes;
-					fpmas::api::utils::perf::Monitor& monitor;
-				public:
-					CommitProbesTask(
-							const std::vector<fpmas::api::utils::perf::Probe*>& probes,
-							fpmas::api::utils::perf::Monitor& monitor);
-					void run() override;
-			};
-			class ClearMonitorTask : public fpmas::scheduler::TaskBase<fpmas::api::scheduler::Task> {
-				private:
-					fpmas::api::utils::perf::Monitor& monitor;
-				public:
-					ClearMonitorTask(fpmas::api::utils::perf::Monitor& monitor);
-					void run() override;
-			};
+			fpmas::scheduler::detail::LambdaTask commit_probes_task;
+			fpmas::scheduler::detail::LambdaTask clear_monitor_task;
 
-			fpmas::scheduler::Job probe_job;
-			CommitProbesTask commit_probes_task;
-			ClearMonitorTask clear_monitor_task;
-			CountersCsvOutput(
+		public:
+			fpmas::scheduler::Job commit_probes_job {{commit_probes_task}};
+			fpmas::scheduler::Job clear_monitor_job {{clear_monitor_task}};
+			LoadBalancingCsvOutput(
 					BasicMetaModel& meta_model,
+					fpmas::api::utils::perf::Probe& balance_probe,
+					fpmas::api::utils::perf::Probe& distribute_probe,
 					fpmas::api::utils::perf::Probe& read_probe,
 					fpmas::api::utils::perf::Probe& write_probe,
+					fpmas::api::utils::perf::Probe& sync_probe,
 					fpmas::api::utils::perf::Monitor& monitor
 					);
-
-		public:
-			template<typename MetaModel>
-				CountersCsvOutput(MetaModel& metamodel) :
-					CountersCsvOutput(metamodel,
-							ReaderWriter<typename MetaModel::CellType, typename MetaModel::CellType>::read_probe,
-							ReaderWriter<typename MetaModel::CellType, typename MetaModel::CellType>::write_probe,
-							ReaderWriter<typename MetaModel::CellType, typename MetaModel::CellType>::monitor) {
-					}
-
-			const fpmas::api::scheduler::Job& probeJob() const {
-				return probe_job;
-			}
 	};
 
 class CellsOutput : public fpmas::io::OutputBase {
