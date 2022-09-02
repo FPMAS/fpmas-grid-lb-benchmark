@@ -1,9 +1,5 @@
 #include "metamodel.h"
 
-MetaGraphCell* MetaGraphCellFactory::operator()() {
-	return new MetaGraphCell(1.0f);
-}
-
 MetaModelFactory::MetaModelFactory(Environment environment, SyncMode sync_mode)
 	: environment(environment), sync_mode(sync_mode) {
 	}

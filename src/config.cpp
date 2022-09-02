@@ -29,6 +29,7 @@ GraphConfig::GraphConfig(YAML::Node config) {
 		}
 	LOAD_YAML_CONFIG_0_OPTIONAL(cell_interactions, Interactions, Interactions::NONE);
 	LOAD_YAML_CONFIG_0_OPTIONAL(sync_mode, SyncMode, SyncMode::GHOST_MODE);
+	LOAD_YAML_CONFIG_0_OPTIONAL(cell_size, std::size_t, (std::size_t) 0);
 	LOAD_YAML_CONFIG_0_OPTIONAL(json_output, bool, false);
 	LOAD_YAML_CONFIG_0_OPTIONAL(dot_output, bool, false);
 }

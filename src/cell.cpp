@@ -49,6 +49,11 @@ MetaGridCell* MetaGridCellFactory::build(fpmas::model::DiscretePoint location) {
 	for(auto attractor : attractors) {
 		utility += utility_function.utility(attractor, location);
 	}
-	return new MetaGridCell(location, utility);
+	return new MetaGridCell(location, utility, cell_size);
 }
+
+MetaGraphCell* MetaGraphCellFactory::operator()() {
+	return new MetaGraphCell(1.0f, cell_size);
+}
+
 

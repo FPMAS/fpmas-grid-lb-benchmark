@@ -8,18 +8,27 @@ using namespace fpmas::model;
 class MetaCell {
 	private:
 		float utility;
+		std::vector<char> data;
 
 	public:
 		// For edge migration optimization purpose only
 		MetaCell() = default;
 
 		// For JSON serialization
-		MetaCell(float utility)
-			: utility(utility) {
+		MetaCell(float utility, std::size_t cell_size)
+			: MetaCell(utility, std::vector<char>(cell_size)) {
+			}
+
+		MetaCell(float utility, const std::vector<char>& data)
+			: utility(utility), data(data) {
 			}
 
 		float getUtility() const {
 			return utility;
+		}
+
+		const std::vector<char>& getData() const {
+			return data;
 		}
 
 		virtual fpmas::api::model::AgentNode* node() = 0;
@@ -44,26 +53,28 @@ class MetaSpatialCell : public MetaCell {
 template<typename CellType>
 struct CellSerialization {
 	static void to_json(nlohmann::json &j, const CellType *cell) {
-		j = cell->getUtility();
+		j = {cell->getUtility(), cell->getData()};
 	}
 
 	static CellType* from_json(const nlohmann::json& j) {
-		return new CellType(j.get<float>());
+		return new CellType(j[0].get<float>(), j[1].get<std::vector<char>>());
 	}
 
 	static std::size_t size(
 			const fpmas::io::datapack::ObjectPack &o, const CellType *cell) {
-		return o.size<float>();
+		return o.size<float>() + o.size(cell->getData());
 	}
 
 	static void to_datapack(
 			fpmas::io::datapack::ObjectPack &o, const CellType *cell) {
 		o.put(cell->getUtility());
+		o.put(cell->getData());
 	}
 
 	static CellType* from_datapack(const fpmas::io::datapack::ObjectPack& o) {
 		float utility = o.get<float>();
-		return new CellType(utility);
+		std::vector<char> data = o.get<std::vector<char>>();
+		return new CellType(utility, data);
 	}
 };
 
@@ -92,8 +103,11 @@ class MetaGridCell :
 		using MetaSpatialCell::MetaSpatialCell;
 
 		// For cell factory
-		MetaGridCell(DiscretePoint location, float utility)
-			: GridCellBase<MetaGridCell>(location), MetaSpatialCell(utility) {
+		MetaGridCell(DiscretePoint location, float utility, const std::vector<char>& data)
+			: GridCellBase<MetaGridCell>(location), MetaSpatialCell(utility, data) {
+			}
+		MetaGridCell(DiscretePoint location, float utility, std::size_t cell_size)
+			: MetaGridCell(location, utility, std::vector<char>(cell_size)) {
 			}
 
 		fpmas::api::model::AgentNode* node() override {
@@ -120,8 +134,11 @@ class MetaGraphCell :
 				using MetaSpatialCell::MetaSpatialCell;
 
 				// For cell factory
-				MetaGraphCell(float utility)
-					: GraphCellBase<MetaGraphCell>(), MetaSpatialCell(utility) {
+				MetaGraphCell(float utility, const std::vector<char>& data)
+					: GraphCellBase<MetaGraphCell>(), MetaSpatialCell(utility, data) {
+					}
+				MetaGraphCell(float utility, std::size_t cell_size)
+					: MetaGraphCell(utility, std::vector<char>(cell_size)) {
 					}
 
 				fpmas::api::model::AgentNode* node() override {
@@ -187,12 +204,27 @@ class MetaGridCellFactory : public fpmas::api::model::GridCellFactory<MetaGridCe
 	public:
 		const UtilityFunction& utility_function;
 		std::vector<GridAttractor> attractors;
+		std::size_t cell_size;
 
 		MetaGridCellFactory(
 				const UtilityFunction& utility_function,
-				std::vector<GridAttractor> attractors
-				) : utility_function(utility_function), attractors(attractors) {
+				std::vector<GridAttractor> attractors,
+				std::size_t cell_size) :
+			utility_function(utility_function), attractors(attractors),
+			cell_size(cell_size) {
 		}
 
 		MetaGridCell* build(DiscretePoint location) override;
 };
+
+class MetaGraphCellFactory {
+	private:
+		std::size_t cell_size;
+	public:
+		MetaGraphCellFactory(std::size_t cell_size)
+			: cell_size(cell_size) {
+			}
+
+		MetaGraphCell* operator()();
+};
+

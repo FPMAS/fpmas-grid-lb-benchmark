@@ -305,7 +305,8 @@ void MetaGridModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
 			utility_function.reset(new StepUtility);
 			break;
 	}
-	MetaGridCellFactory cell_factory(*utility_function, config.grid_attractors);
+	MetaGridCellFactory cell_factory(
+			*utility_function, config.grid_attractors, config.cell_size);
 	MooreGrid<MetaGridCell>::Builder grid(
 			cell_factory, config.grid_width, config.grid_height);
 
@@ -333,10 +334,6 @@ void MetaGridModel<SyncMode>::buildAgents(const BenchmarkConfig& config) {
 			},
 			agent_factory, mapping);
 }
-
-struct MetaGraphCellFactory {
-	MetaGraphCell* operator()();
-};
 
 template<template<typename> class SyncMode>
 class MetaGraphModel :
@@ -372,7 +369,7 @@ void MetaGraphModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
 			// Grid type
 			break;
 	}
-	MetaGraphCellFactory graph_cell_factory;
+	MetaGraphCellFactory graph_cell_factory(config.cell_size);
 	SpatialGraphBuilder<MetaGraphCell> graph_builder(
 			*builder, config.num_cells,
 			graph_cell_factory

@@ -4,8 +4,7 @@ grid_width: 100
 grid_height: 100
 
 # Graph environment
-#environment: GRAPH
-#graph_type: SMALL_WORLD
+#environment: SMALL_WORLD
 #num_cells: 1000
 #output_degree: 6
 #p: 0.1
@@ -27,6 +26,10 @@ cell_weight: 1.
 # If enabled, update weight of edges between cells (CELL_SUCCESSORs) according
 # to the count of agents currently located in the cell
 dynamic_cell_edge_weights: false
+
+cell_interactions: NONE
+sync_mode: HARD_SYNC_MODE
+cell_size: 16
 
 # BenchmarkAgents node weight
 agent_weight: 1.
