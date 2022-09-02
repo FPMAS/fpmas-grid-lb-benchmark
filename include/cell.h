@@ -23,6 +23,7 @@ class MetaCell {
 		}
 
 		virtual fpmas::api::model::AgentNode* node() = 0;
+		virtual const fpmas::api::model::AgentNode* node() const = 0;
 };
 
 class MetaSpatialCell : public MetaCell {
@@ -99,6 +100,11 @@ class MetaGridCell :
 			return this->GridCellBase<MetaGridCell>::node();
 		}
 
+		const fpmas::api::model::AgentNode* node() const override {
+			return this->GridCellBase<MetaGridCell>::node();
+		}
+
+
 		IMPLEM_CELL_INTERACTIONS(MetaGridCell);
 		
 };
@@ -119,6 +125,10 @@ class MetaGraphCell :
 					}
 
 				fpmas::api::model::AgentNode* node() override {
+					return this->GraphCellBase<MetaGraphCell>::node();
+				}
+
+				const fpmas::api::model::AgentNode* node() const override {
 					return this->GraphCellBase<MetaGraphCell>::node();
 				}
 

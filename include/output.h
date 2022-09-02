@@ -24,9 +24,12 @@ fpmas::scheduler::Date, // Time Step
 	float, // Local cells
 	float, // Distant agent->agent edges
 	float, // Distant agent->cell edges
+	float, // Local cell edges
 	float, // Distant cell->cell edges
-	unsigned int, // Cell->Cell read counters
-	unsigned int, // Cell->Cell write counters
+	unsigned int, // LOCAL Cell->Cell read counters
+	unsigned int, // LOCAL Cell->Cell write counters
+	unsigned int, // DISTANT Cell->Cell read counters
+	unsigned int, // DISTANT Cell->Cell write counters
 	unsigned int // Sync time
 	> LbCsvOutput;
 
@@ -44,8 +47,10 @@ class LoadBalancingCsvOutput :
 					BasicMetaModel& meta_model,
 					fpmas::api::utils::perf::Probe& balance_probe,
 					fpmas::api::utils::perf::Probe& distribute_probe,
-					fpmas::api::utils::perf::Probe& read_probe,
-					fpmas::api::utils::perf::Probe& write_probe,
+					fpmas::api::utils::perf::Probe& local_read_probe,
+					fpmas::api::utils::perf::Probe& local_write_probe,
+					fpmas::api::utils::perf::Probe& distant_read_probe,
+					fpmas::api::utils::perf::Probe& distant_write_probe,
 					fpmas::api::utils::perf::Probe& sync_probe,
 					fpmas::api::utils::perf::Monitor& monitor
 					);

@@ -57,8 +57,10 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(
 		BasicMetaModel& metamodel,
 		fpmas::api::utils::perf::Probe& balance_probe,
 		fpmas::api::utils::perf::Probe& distribute_probe,
-		fpmas::api::utils::perf::Probe& read_probe,
-		fpmas::api::utils::perf::Probe& write_probe,
+		fpmas::api::utils::perf::Probe& local_read_probe,
+		fpmas::api::utils::perf::Probe& local_write_probe,
+		fpmas::api::utils::perf::Probe& distant_read_probe,
+		fpmas::api::utils::perf::Probe& distant_write_probe,
 		fpmas::api::utils::perf::Probe& sync_probe,
 		fpmas::api::utils::perf::Monitor& monitor) :
 		fpmas::io::FileOutput(
@@ -109,22 +111,44 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(
 						total_weight+=edge->getWeight();
 			return total_weight;
 			}},
+			{"LOCAL_CELL_EDGES", [&metamodel] {
+			float total_weight = 0;
+			for(auto cell : metamodel.cellGroup().localAgents())
+				for(auto edge : cell->node()->getOutgoingEdges())
+					if(edge->state() == fpmas::api::graph::LOCAL) {
+						total_weight+=edge->getWeight();
+					}
+			return total_weight;
+			}},
 			{"DISTANT_CELL_EDGES", [&metamodel] {
 			float total_weight = 0;
 			for(auto cell : metamodel.cellGroup().localAgents())
 				for(auto edge : cell->node()->getOutgoingEdges())
-					if(edge->state() == fpmas::api::graph::DISTANT)
+					// No filter needed since there is no outgoing edges to
+					// other agents than cells
+					if(edge->state() == fpmas::api::graph::DISTANT) {
 						total_weight+=edge->getWeight();
+					}
 			return total_weight;
 			}},
-			{"CELL_CELL_READ", [&monitor] {
+			{"LOCAL_CELL_READ", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(
-					monitor.totalDuration("READ")
+					monitor.totalDuration("LOCAL_READ")
 					).count();
 			}},
-			{"CELL_CELL_WRITE", [&monitor] {
+			{"LOCAL_CELL_WRITE", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(
-					monitor.totalDuration("WRITE")
+					monitor.totalDuration("LOCAL_WRITE")
+					).count();
+			}},
+			{"DISTANT_CELL_READ", [&monitor] {
+			return std::chrono::duration_cast<std::chrono::microseconds>(
+					monitor.totalDuration("DISTANT_READ")
+					).count();
+			}},
+			{"DISTANT_CELL_WRITE", [&monitor] {
+			return std::chrono::duration_cast<std::chrono::microseconds>(
+					monitor.totalDuration("DISTANT_WRITE")
 					).count();
 			}},
 			{"CELL_SYNC", [&monitor] {
@@ -134,13 +158,16 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(
 			}}
 ), commit_probes_task([
 		&balance_probe, &distribute_probe,
-		&read_probe, &write_probe, &sync_probe,
-		&monitor
+		&local_read_probe, &local_write_probe,
+		&distant_read_probe, &distant_write_probe,
+		&sync_probe, &monitor
 	] () {
 	monitor.commit(balance_probe);
 	monitor.commit(distribute_probe);
-	monitor.commit(read_probe);
-	monitor.commit(write_probe);
+	monitor.commit(local_read_probe);
+	monitor.commit(local_write_probe);
+	monitor.commit(distant_read_probe);
+	monitor.commit(distant_write_probe);
 	monitor.commit(sync_probe);
 	}),
 	clear_monitor_task([&monitor] () {
