@@ -17,7 +17,7 @@ MetaModelFactory::MetaModelFactory(Environment environment, SyncMode sync_mode)
 		case SyncMode::GLOBAL_GHOST_MODE:\
 			BUILD_MODEL(MODEL, GlobalGhostMode);\
 		case SyncMode::HARD_SYNC_MODE:\
-			BUILD_MODEL(MODEL, HardSyncMode);\
+			BUILD_MODEL(MODEL, HardSyncModeWithGhostLink);\
 		default:\
 			return nullptr;\
 	}
