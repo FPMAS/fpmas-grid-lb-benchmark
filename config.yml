@@ -51,7 +51,7 @@ MetaAgentBase:
 
 # If utility is not UNIFORM, defines a list of attractors.
 # An attractor is defined as [[x, y], radius]
-attractors: 
+grid_attractors: 
   - [[20, 20], 100]
   - [[80, 80], 100]
 

@@ -25,6 +25,7 @@ template<typename BaseModel, typename CellType, typename AgentType>
 class MetaModel : public BasicMetaModel {
 	private:
 		// Cell behaviors
+		fpmas::model::IdleBehavior idle_behavior;
 		Behavior<MetaSpatialCell> cell_update_edge_weights_behavior {
 			&MetaSpatialCell::update_edge_weights
 		};
@@ -189,8 +190,11 @@ MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 						cell_read_all_write_all_cell_behavior
 						);
 				break;
-
 			default:
+				model.buildGroup(
+						CELL_GROUP,
+						idle_behavior
+						);
 				break;
 		}
 		auto& create_relations_neighbors_group = model.buildGroup(
@@ -309,8 +313,10 @@ void MetaGridModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
 			*utility_function, config.grid_attractors, config.cell_size);
 	MooreGrid<MetaGridCell>::Builder grid(
 			cell_factory, config.grid_width, config.grid_height);
-
-	auto local_cells = grid.build(this->model, {this->model.getGroup(CELL_GROUP)});
+	fpmas::api::model::GroupList cell_groups;
+	if(config.cell_interactions != Interactions::NONE)
+		cell_groups.push_back(this->model.getGroup(CELL_GROUP));
+	auto local_cells = grid.build(this->model, cell_groups);
 	if(config.json_output)
 		dump_grid(config.grid_width, config.grid_height, local_cells);
 }
