@@ -38,4 +38,6 @@ target_link_libraries(fpmas-metamodel fpmas-metamodel-lib)
 add_executable(fpmas-metamodel-graph-stats graph_stats.cpp)
 target_link_libraries(fpmas-metamodel-graph-stats fpmas-metamodel-lib)
 
+add_executable(gen-seed gen_seed.cpp)
+
 add_subdirectory(tests)
