@@ -84,6 +84,7 @@ struct GraphConfig {
 	Interactions cell_interactions = Interactions::NONE;
 	SyncMode sync_mode = SyncMode::GHOST_MODE;
 	std::size_t cell_size = 0;
+	float zoltan_imbalance_tol = 1.1;
 	bool json_output = false;
 	bool dot_output = false;
 

@@ -49,12 +49,13 @@ MetaAgentBase:
   # Max contacts count
   max_contacts: 10
 
+zoltan_imbalance_tol: 1.1
+
 # If utility is not UNIFORM, defines a list of attractors.
 # An attractor is defined as [[x, y], radius]
 grid_attractors: 
   - [[20, 20], 100]
   - [[80, 80], 100]
-
 
 # Test cases list
 # A Test case is defined as [ALGORITHM, [lb_periods, ...]]

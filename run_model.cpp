@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 					case LbAlgorithm::ZOLTAN_LB:
 						{
 							ZoltanLoadBalancing zoltan_lb(
-									fpmas::communication::WORLD, lb_period);
+									fpmas::communication::WORLD, lb_period, config.zoltan_imbalance_tol);
 							BasicMetaModel* model = model_factory.build(
 									"zoltan_lb-" + std::to_string(lb_period), config,
 									scheduler, runtime, zoltan_lb, lb_period
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 					case LbAlgorithm::SCHEDULED_LB:
 						{
 							ZoltanLoadBalancing zoltan_lb(
-									fpmas::communication::WORLD, lb_period);
+									fpmas::communication::WORLD, lb_period, config.zoltan_imbalance_tol);
 							ScheduledLoadBalancing scheduled_load_balancing(
 									zoltan_lb, scheduler, runtime
 									);
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 					case LbAlgorithm::ZOLTAN_CELL_LB:
 						{
 							ZoltanLoadBalancing zoltan_lb(
-									fpmas::communication::WORLD, lb_period);
+									fpmas::communication::WORLD, lb_period, config.zoltan_imbalance_tol);
 							CellLoadBalancing zoltan_cell_lb(
 									fpmas::communication::WORLD, zoltan_lb
 									);
