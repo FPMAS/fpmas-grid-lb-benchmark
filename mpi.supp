@@ -1,0 +1,180 @@
+# Leaks
+{
+   MPI::init()
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:ompi_mpi_init
+   ...
+}
+{
+   MPI::finalize()
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:ompi_mpi_finalize
+   ...
+}
+{
+   mca_base_framework_open
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:mca_base_framework_open
+   ...
+}
+{
+   _dl_open
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:_dl_open
+   ...
+}
+{
+   _dl_close
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:_dl_close
+   ...
+}
+{
+   Alltoallv->do_open
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:do_open
+   ...
+   fun:PMPI_Alltoallv
+   ...
+}
+{
+   all_reduce->do_open
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:do_open
+   ...
+   fun:ompi_comm_allreduce_intra_nb
+   ...
+}
+{
+   start_thread
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:start_thread
+   ...
+}
+{
+   opal_convertor_pack
+   Memcheck:Addr2
+   ...
+   fun:opal_convertor_pack
+   ...
+}
+
+# Those suppressions might hide real user problems, use with care
+{
+   PMPI_Alltoallv client check request
+   Memcheck:User
+   ...
+   fun:PMPI_Alltoallv
+   ...
+}
+{
+   PMPI_Allgatherv invalid read 8
+   Memcheck:Addr8
+   fun:memmove
+   ...
+   fun:PMPI_Allgatherv
+   ...
+}
+{
+   PMPI_Allgatherv invalid read 2
+   Memcheck:Addr2
+   fun:memmove
+   ...
+   fun:PMPI_Allgatherv
+   ...
+}
+{
+   PMPI_Barrier
+   Memcheck:Cond
+   ...
+   fun:PMPI_Barrier
+   ...
+   fun:LB_Partition
+   ...
+}
+{
+   Zoltan_LB_Partition
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:Zoltan_Malloc
+   ...
+   fun:Zoltan_LB_Partition
+   ...
+}
+{
+   Zoltan invalid read
+   Memcheck:Addr4
+   fun:refine_fm2
+   ...
+   fun:LB_Partition
+   ...
+}
+{
+   Zoltan client check
+   Memcheck:User
+   ...
+   fun:PMPI_Reduce
+   fun:refine_fm2
+   ...
+   fun:LB_Partition
+   ...
+}
+
+# Syscalls
+{
+   MPI::init()->socketcall.getsockopt(optlen)
+   Memcheck:Param
+   socketcall.getsockopt(optlen)
+   ...
+   fun:ompi_mpi_init
+   ...
+}
+{
+   MPI::init()->socketcall.getsockopt(optlen_out)
+   Memcheck:Param
+   socketcall.getsockopt(optlen_out)
+   ...
+   fun:ompi_mpi_init
+   ...
+}
+{
+   MPI::init()->setsockopt(optlen)
+   Memcheck:Param
+   setsockopt(optlen)
+   ...
+   fun:ompi_mpi_init
+   ...
+}
+{
+   start_thread->writev(vector[...])
+   Memcheck:Param
+   writev(vector[...])
+   ...
+   fun:start_thread
+   ...
+}
+# Conditionnal jump
+{
+   Alltoallv
+   Memcheck:Cond
+   ...
+   fun:PMPI_Alltoallv
+   ...
+}
