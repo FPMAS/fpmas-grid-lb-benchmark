@@ -39,7 +39,7 @@ enum class MovePolicy {
 };
 
 enum class LbAlgorithm {
-	SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, RANDOM_LB
+	SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, STATIC_ZOLTAN_CELL_LB, RANDOM_LB
 };
 
 enum class AgentInteractions {

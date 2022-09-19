@@ -117,6 +117,22 @@ int main(int argc, char** argv) {
 							delete model;
 						}
 						break;
+					case LbAlgorithm::STATIC_ZOLTAN_CELL_LB:
+						{
+							ZoltanLoadBalancing zoltan_lb(
+									fpmas::communication::WORLD, lb_period, config.zoltan_imbalance_tol);
+							StaticLoadBalancing static_zoltan_lb(zoltan_lb);
+							CellLoadBalancing zoltan_cell_lb(
+									fpmas::communication::WORLD, static_zoltan_lb
+									);
+							BasicMetaModel* model = model_factory.build(
+									"static_zoltan_cell_lb-" + std::to_string(lb_period), config,
+									scheduler, runtime, zoltan_cell_lb, lb_period
+									);
+							model->init()->run();
+							delete model;
+						}
+						break;
 					case LbAlgorithm::RANDOM_LB:
 						{
 

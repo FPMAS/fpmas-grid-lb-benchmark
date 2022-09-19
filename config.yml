@@ -49,6 +49,9 @@ MetaAgentBase:
   # Max contacts count
   max_contacts: 10
 
+MetaSpatialCell:
+  cell_edge_weight: 1.0
+
 zoltan_imbalance_tol: 1.1
 
 # If utility is not UNIFORM, defines a list of attractors.
@@ -66,6 +69,7 @@ test_cases:
   - [ZOLTAN_LB, [1, 10, 50]]
   - [GRID_LB, [1, 10]]
   - [ZOLTAN_CELL_LB, [1, 10, 50]]
+  - [STATIC_ZOLTAN_CELL_LB, [1, 10]]
   - [RANDOM_LB, [50]]
 
 json_output: false

@@ -168,6 +168,8 @@ namespace YAML {
 				return Node("GRID_LB");
 			case LbAlgorithm::ZOLTAN_CELL_LB:
 				return Node("ZOLTAN_CELL_LB");
+			case LbAlgorithm::STATIC_ZOLTAN_CELL_LB:
+				return Node("STATIC_ZOLTAN_CELL_LB");
 			case LbAlgorithm::RANDOM_LB:
 				return Node("RANDOM_LB");
 			default:
@@ -191,6 +193,10 @@ namespace YAML {
 		}
 		if(str == "ZOLTAN_CELL_LB") {
 			lb_algorithm = LbAlgorithm::ZOLTAN_CELL_LB;
+			return true;
+		}
+		if(str == "STATIC_ZOLTAN_CELL_LB") {
+			lb_algorithm = LbAlgorithm::STATIC_ZOLTAN_CELL_LB;
 			return true;
 		}
 		if(str == "RANDOM_LB") {
