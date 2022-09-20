@@ -41,7 +41,7 @@ float StepUtility::utility(GridAttractor attractor, DiscretePoint point) const {
 			) > attractor.radius)
 		return InverseUtility(attractor.radius).utility(attractor, point);
 	else
-		return 1.f;
+		return 1000.f;
 }
 
 MetaGridCell* MetaGridCellFactory::build(fpmas::model::DiscretePoint location) {
