@@ -243,7 +243,7 @@ DistantAgentView::DistantAgentView(const fpmas::api::model::Agent* agent) :
 
 AgentsOutputView::AgentsOutputView(
 		int rank, std::size_t grid_width, std::size_t grid_height,
-		std::vector<MetaAgentView> agents,
+		std::vector<MetaGridAgentView> agents,
 		std::vector<DistantAgentView> distant_agents
 		) :
 	rank(rank), grid_width(grid_width), grid_height(grid_height),
@@ -258,13 +258,13 @@ AgentsOutput::AgentsOutput(
 	fpmas::io::JsonOutput<AgentsOutputView>(
 			output_file, [this, &meta_model, grid_width, grid_height] () {
 
-			std::vector<MetaAgentView> local_agents;
+			std::vector<MetaGridAgentView> local_agents;
 			std::vector<DistantAgentView> distant_agents;
 			for(auto agent : meta_model.agentGroup().agents())
 				switch(agent->node()->state()) {
 					case fpmas::api::graph::LOCAL:
 						local_agents.emplace_back(
-								dynamic_cast<const MetaAgentBase*>(agent)
+								dynamic_cast<const MetaGridAgent*>(agent)
 								);
 					break;
 					case fpmas::api::graph::DISTANT:

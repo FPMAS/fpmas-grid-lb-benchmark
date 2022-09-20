@@ -100,12 +100,12 @@ struct AgentsOutputView {
 	int rank;
 	std::size_t grid_width;
 	std::size_t grid_height;
-	std::vector<MetaAgentView> agents;
+	std::vector<MetaGridAgentView> agents;
 	std::vector<DistantAgentView> distant_agents;
 
 	AgentsOutputView(
 			int rank, std::size_t grid_width, std::size_t grid_height,
-			std::vector<MetaAgentView> agents,
+			std::vector<MetaGridAgentView> agents,
 			std::vector<DistantAgentView> distant_agents
 			);
 };

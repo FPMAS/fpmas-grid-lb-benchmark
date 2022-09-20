@@ -73,4 +73,5 @@ test_cases:
   - [RANDOM_LB, [50]]
 
 json_output: false
+json_output_period: 1
 dot_output: false

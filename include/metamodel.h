@@ -247,13 +247,23 @@ MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 		fpmas::scheduler::TimeStep last_lb_date
 			= ((config.num_steps-1) / lb_period) * lb_period;
 		// Clears distant nodes
-		scheduler.schedule(last_lb_date + 0.01, sync_graph);
-		if(config.json_output && config.environment == Environment::GRID)
-			// JSON cell output
-			scheduler.schedule(last_lb_date + 0.02, cells_output.job());
-		if(config.json_output && config.occupation_rate > 0.0)
-			// JSON agent output
-			scheduler.schedule(last_lb_date + 0.03, agents_output.job());
+		if(config.json_output && config.environment == Environment::GRID) {
+			if(config.json_output_period > 0) {
+				// JSON cell output
+				scheduler.schedule(0.33, config.json_output_period, cells_output.job());
+				// JSON agent output
+				if(config.occupation_rate > 0.0)
+					scheduler.schedule(0.34, config.json_output_period, agents_output.job());
+
+			} else {
+				// JSON cell output
+				scheduler.schedule(last_lb_date + 0.02, cells_output.job());
+				// JSON agent output
+				if(config.occupation_rate > 0.0)
+					scheduler.schedule(last_lb_date + 0.03, agents_output.job());
+			}
+
+		}
 		if(config.dot_output)
 			// Dot output
 			scheduler.schedule(last_lb_date + 0.04, dot_output.job());

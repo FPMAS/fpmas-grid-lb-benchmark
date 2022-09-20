@@ -2,6 +2,7 @@
 
 #include "fpmas.h"
 #include "cell.h"
+#include <fpmas/api/graph/location_state.h>
 
 template<typename CellType>
 struct MovePolicyFunction {
@@ -57,6 +58,7 @@ CellType* MaxMovePolicy<CellType>::selectCell(
 		fpmas::model::ReadGuard read(cell);
 		cells.push_back({cell, cell->getUtility()});
 	}
+
 	return std::max_element(cells.begin(), cells.end(),
 			[] (
 				const std::pair<CellType*, float>& a1,

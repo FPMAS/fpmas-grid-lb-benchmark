@@ -86,6 +86,7 @@ struct GraphConfig {
 	std::size_t cell_size = 0;
 	float zoltan_imbalance_tol = 1.1;
 	bool json_output = false;
+	int json_output_period = -1;
 	bool dot_output = false;
 
 	template<typename T>
