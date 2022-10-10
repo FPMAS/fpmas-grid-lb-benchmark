@@ -131,25 +131,37 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(
 					}
 			return total_weight;
 			}},
-			{"LOCAL_CELL_READ", [&monitor] {
+			{"LOCAL_CELL_READ_TIME", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(
 					monitor.totalDuration("LOCAL_READ")
 					).count();
 			}},
-			{"LOCAL_CELL_WRITE", [&monitor] {
+			{"LOCAL_CELL_READ_COUNT", [&monitor] {
+			return monitor.callCount("LOCAL_READ");
+			}},
+			{"LOCAL_CELL_WRITE_TIME", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(
 					monitor.totalDuration("LOCAL_WRITE")
 					).count();
 			}},
-			{"DISTANT_CELL_READ", [&monitor] {
+			{"LOCAL_CELL_WRITE_COUNT", [&monitor] {
+			return monitor.callCount("LOCAL_WRITE");
+			}},
+			{"DISTANT_CELL_READ_TIME", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(
 					monitor.totalDuration("DISTANT_READ")
 					).count();
 			}},
-			{"DISTANT_CELL_WRITE", [&monitor] {
+			{"DISTANT_CELL_READ_COUNT", [&monitor] {
+			return monitor.callCount("DISTANT_READ");
+			}},
+			{"DISTANT_CELL_WRITE_TIME", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(
 					monitor.totalDuration("DISTANT_WRITE")
 					).count();
+			}},
+			{"DISTANT_CELL_WRITE_COUNT", [&monitor] {
+			return monitor.callCount("DISTANT_WRITE");
 			}},
 			{"CELL_SYNC", [&monitor] {
 			return std::chrono::duration_cast<std::chrono::microseconds>(

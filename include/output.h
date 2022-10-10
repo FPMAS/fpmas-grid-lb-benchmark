@@ -26,10 +26,14 @@ fpmas::scheduler::Date, // Time Step
 	float, // Distant agent->cell edges
 	float, // Local cell edges
 	float, // Distant cell->cell edges
-	unsigned int, // LOCAL Cell->Cell read counters
-	unsigned int, // LOCAL Cell->Cell write counters
-	unsigned int, // DISTANT Cell->Cell read counters
-	unsigned int, // DISTANT Cell->Cell write counters
+	unsigned int, // LOCAL Cell->Cell read time
+	unsigned int, // LOCAL Cell->Cell read count
+	unsigned int, // LOCAL Cell->Cell write time
+	unsigned int, // LOCAL Cell->Cell write count
+	unsigned int, // DISTANT Cell->Cell read time
+	unsigned int, // DISTANT Cell->Cell read count
+	unsigned int, // DISTANT Cell->Cell write time
+	unsigned int, // DISTANT Cell->Cell write count
 	unsigned int // Sync time
 	> LbCsvOutput;
 
