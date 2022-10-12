@@ -386,7 +386,7 @@ void MetaGraphModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
 			break;
 	}
 	MetaGraphCellFactory graph_cell_factory(config.cell_size);
-	SpatialGraphBuilder<MetaGraphCell> graph_builder(
+	CellNetworkBuilder<MetaGraphCell> cell_network_builder(
 			*builder, config.num_cells,
 			graph_cell_factory
 			);
@@ -395,7 +395,7 @@ void MetaGraphModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
 		cell_groups.push_back(this->model.getGroup(UPDATE_CELL_EDGE_WEIGHTS_GROUP));
 	if(config.cell_interactions != Interactions::NONE)
 		cell_groups.push_back(this->model.getGroup(CELL_GROUP));
-	graph_builder.build(this->model, cell_groups);
+	cell_network_builder.build(this->model, cell_groups);
 
 	delete builder;
 
