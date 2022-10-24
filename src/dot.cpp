@@ -1,5 +1,6 @@
 #include "dot.h"
 #include "metamodel.h"
+#include <iomanip>
 
 const std::string set19_color_scheme[9] {
 	"#e41a1c", // red
