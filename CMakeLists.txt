@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 get_filename_component(DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-project(fpmas-metamodel)
+project(fpmas-metamodel VERSION 1.0)
 
 find_package(fpmas 1.6 REQUIRED)
 
