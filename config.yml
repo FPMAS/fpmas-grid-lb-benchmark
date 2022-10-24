@@ -49,7 +49,7 @@ MetaAgentBase:
   # Max contacts count
   max_contacts: 10
 
-MetaSpatialCell:
+MetaCell:
   cell_edge_weight: 1.0
 
 zoltan_imbalance_tol: 1.1

@@ -1,6 +1,16 @@
 #include "agent.h"
 #include "config.h"
 
+#define LOAD_YAML_CONFIG_0(FIELD_NAME, TYPENAME)\
+	load_config(#FIELD_NAME, FIELD_NAME, config[#FIELD_NAME], #TYPENAME)
+#define LOAD_YAML_CONFIG_0_OPTIONAL(FIELD_NAME, TYPENAME, DEFAULT)\
+	load_config_optional(#FIELD_NAME, FIELD_NAME, config[#FIELD_NAME], #TYPENAME, DEFAULT)
+#define LOAD_YAML_CONFIG_1(ROOT, FIELD_NAME, TYPENAME)\
+	load_config(#ROOT "::" #FIELD_NAME, ROOT::FIELD_NAME, config[#ROOT][#FIELD_NAME], #TYPENAME)
+#define LOAD_YAML_CONFIG_1_OPTIONAL(ROOT, FIELD_NAME, TYPENAME, DEFAULT)\
+	load_config_optional(#ROOT "::" #FIELD_NAME, ROOT::FIELD_NAME, config[#ROOT][#FIELD_NAME], #TYPENAME, DEFAULT)
+
+
 GraphConfig::GraphConfig(YAML::Node config) {
 	LOAD_YAML_CONFIG_0(environment, Environment);
 	switch(this->environment) {
@@ -16,8 +26,7 @@ GraphConfig::GraphConfig(YAML::Node config) {
 			LOAD_YAML_CONFIG_0(output_degree, unsigned int);
 	}
 	LOAD_YAML_CONFIG_0_OPTIONAL(cell_weight, float, 1.0f);
-	LOAD_YAML_CONFIG_0_OPTIONAL(dynamic_cell_edge_weights, bool, false);
-	LOAD_YAML_CONFIG_1_OPTIONAL(MetaSpatialCell, cell_edge_weight, float, 1.0f);
+	LOAD_YAML_CONFIG_1_OPTIONAL(MetaCell, cell_edge_weight, float, 1.0f);
 	LOAD_YAML_CONFIG_0_OPTIONAL(utility, Utility, Utility::UNIFORM);
 	if(this->utility != Utility::UNIFORM)
 		switch(this->environment) {
@@ -25,22 +34,20 @@ GraphConfig::GraphConfig(YAML::Node config) {
 				LOAD_YAML_CONFIG_0(grid_attractors, std::vector<GridAttractor>);
 				break;
 			default:
-				LOAD_YAML_CONFIG_0(attractors, std::vector<Attractor>);
+				break;
+				// TODO: Graph based attractors
 		}
-	LOAD_YAML_CONFIG_0_OPTIONAL(cell_interactions, Interactions, Interactions::NONE);
-	LOAD_YAML_CONFIG_0_OPTIONAL(sync_mode, SyncMode, SyncMode::GHOST_MODE);
-	LOAD_YAML_CONFIG_0_OPTIONAL(cell_size, std::size_t, (std::size_t) 0);
 	LOAD_YAML_CONFIG_0_OPTIONAL(zoltan_imbalance_tol, float, 1.1f);
 	LOAD_YAML_CONFIG_0_OPTIONAL(json_output, bool, false);
 	LOAD_YAML_CONFIG_0_OPTIONAL(json_output_period, int, -1);
 	LOAD_YAML_CONFIG_0_OPTIONAL(dot_output, bool, false);
 }
 
-BenchmarkConfig::BenchmarkConfig(const GraphConfig& graph_config)
+ModelConfig::ModelConfig(const GraphConfig& graph_config)
 	: GraphConfig(graph_config) {
 	}
 
-BenchmarkConfig::BenchmarkConfig(YAML::Node config) : GraphConfig(config) {
+ModelConfig::ModelConfig(YAML::Node config) : GraphConfig(config) {
 	LOAD_YAML_CONFIG_0(occupation_rate, float);
 	LOAD_YAML_CONFIG_0(num_steps, fpmas::api::scheduler::TimeStep);
 	if(this->occupation_rate > 0.0) {
@@ -55,6 +62,10 @@ BenchmarkConfig::BenchmarkConfig(YAML::Node config) : GraphConfig(config) {
 			LOAD_YAML_CONFIG_1(MetaAgentBase, max_contacts, unsigned int);
 		}
 	}
+	LOAD_YAML_CONFIG_0_OPTIONAL(cell_interactions, Interactions, Interactions::NONE);
+	LOAD_YAML_CONFIG_0_OPTIONAL(dynamic_cell_edge_weights, bool, false);
+	LOAD_YAML_CONFIG_0_OPTIONAL(sync_mode, SyncMode, SyncMode::GHOST_MODE);
+	LOAD_YAML_CONFIG_0_OPTIONAL(cell_size, std::size_t, (std::size_t) 0);
 	LOAD_YAML_CONFIG_1_OPTIONAL(
 			MetaAgentBase, move_policy, MovePolicy, MovePolicy::RANDOM);
 	LOAD_YAML_CONFIG_1_OPTIONAL(

@@ -46,9 +46,11 @@ int main(int argc, char** argv) {
 	CLI11_PARSE(app, argc, argv);
 
 	fpmas::seed(seed);
+	random_interactions.seed(seed);
+
 	fpmas::init(argc, argv);
 	{
-		BenchmarkConfig config(YAML::LoadFile(config_file));
+		ModelConfig config(YAML::LoadFile(config_file));
 		if(!config.is_valid)
 			return EXIT_FAILURE;
 

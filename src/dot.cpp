@@ -5,6 +5,7 @@
 #include <fpmas/utils/functional.h>
 #include <fpmas/api/model/spatial/grid.h>
 #include <iomanip>
+#include <nlohmann/adl_serializer.hpp>
 
 const std::string set19_color_scheme[9] {
 	"#e41a1c", // red
@@ -158,42 +159,47 @@ void DotOutput::dump() {
 	}
 }
 
-void to_json(nlohmann::json& json, const NodeView& node_view) {
-	json[0] = node_view.id;
-	json[1] = node_view.rank;
-	json[2] = node_view.is_location;
-	json[3] = node_view.fixed_position;
-	if(node_view.fixed_position) {
-		json[4] = node_view.x;
-		json[5] = node_view.y;
+namespace nlohmann{
+	void adl_serializer<NodeView>::to_json(nlohmann::json& json, const NodeView& node_view) {
+		json[0] = node_view.id;
+		json[1] = node_view.rank;
+		json[2] = node_view.is_location;
+		json[3] = node_view.fixed_position;
+		if(node_view.fixed_position) {
+			json[4] = node_view.x;
+			json[5] = node_view.y;
+		}
+		if(node_view.is_location)
+			json[6] = node_view.utility;
 	}
-	if(node_view.is_location)
-		json[6] = node_view.utility;
-}
 
-void from_json(const nlohmann::json& json, NodeView& node_view) {
-	json[0].get_to(node_view.id);
-	json[1].get_to(node_view.rank);
-	json[2].get_to(node_view.is_location);
-	json[3].get_to(node_view.fixed_position);
-	if(node_view.fixed_position) {
-		json[4].get_to(node_view.x);
-		json[5].get_to(node_view.y);
+	void adl_serializer<NodeView>::from_json(const nlohmann::json& json, NodeView& node_view) {
+		json[0].get_to(node_view.id);
+		json[1].get_to(node_view.rank);
+		json[2].get_to(node_view.is_location);
+		json[3].get_to(node_view.fixed_position);
+		if(node_view.fixed_position) {
+			json[4].get_to(node_view.x);
+			json[5].get_to(node_view.y);
+		}
+		if(node_view.is_location)
+			json[6].get_to(node_view.utility);
 	}
-	if(node_view.is_location)
-		json[6].get_to(node_view.utility);
+
+
+	void adl_serializer<EdgeView>::to_json(nlohmann::json& json, const EdgeView& edge_view) {
+		json[0] = edge_view.id;
+		json[1] = edge_view.src;
+		json[2] = edge_view.tgt;
+		json[3] = edge_view.layer;
+	}
+
+	void adl_serializer<EdgeView>::from_json(const nlohmann::json& json, EdgeView& edge_view) {
+		json[0].get_to(edge_view.id);
+		json[1].get_to(edge_view.src);
+		json[2].get_to(edge_view.tgt);
+		json[3].get_to(edge_view.layer);
+	}
 }
 
-void to_json(nlohmann::json& json, const EdgeView& edge_view) {
-	json[0] = edge_view.id;
-	json[1] = edge_view.src;
-	json[2] = edge_view.tgt;
-	json[3] = edge_view.layer;
-}
 
-void from_json(const nlohmann::json& json, EdgeView& edge_view) {
-	json[0].get_to(edge_view.id);
-	json[1].get_to(edge_view.src);
-	json[2].get_to(edge_view.tgt);
-	json[3].get_to(edge_view.layer);
-}

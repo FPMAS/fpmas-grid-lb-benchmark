@@ -4,18 +4,43 @@
 #include "cell.h"
 #include <fpmas/api/graph/location_state.h>
 
+/**
+ * @file agent.h
+ * Contains MetaAgent features.
+ */
+
+/**
+ * Interface used to select the cell to which an agent will move.
+ */
 template<typename CellType>
 struct MovePolicyFunction {
+	/**
+	 * Selects a cell to move from the specified mobility field.
+	 *
+	 * @param mobility_field Mobility field of an agent
+	 * @return Pointer to the selected cell
+	 */
 	virtual CellType* selectCell(
 			fpmas::model::Neighbors<CellType>& mobility_field) const = 0;
 };
 
+/**
+ * MovePolicyFunction implementation: selects a random cell from the mobility
+ * field.
+ *
+ * The probability to select each cell is proportional to its utility.
+ */
 template<typename CellType>
 struct RandomMovePolicy : public MovePolicyFunction<CellType> {
 	CellType* selectCell(
 			fpmas::model::Neighbors<CellType>& mobility_field) const override;
 };
 
+/**
+ * MovePolicyFunction implementation: selects the cell with the maximum utility
+ * from the mobility field. If several cells have the same maximum utility, a
+ * random cell is chosen among them.
+ */
 template<typename CellType>
 struct MaxMovePolicy : public MovePolicyFunction<CellType> {
 	CellType* selectCell(
@@ -69,15 +94,43 @@ CellType* MaxMovePolicy<CellType>::selectCell(
 			)->first;
 }
 
+/**
+ * A generic MetaAgent class, that defines features common for both
+ * MetaGridAgents and MetaGraphAgents.
+ *
+ * If `config.agent_interactions` is set to CONTACTS in the MetaModel
+ * configuration, all agents maintain a contact list with which a link is kept,
+ * allowing agents in contact to interact even if they are geographically
+ * distant.
+ */
 class MetaAgentBase {
 	public:
+		/**
+		 * Maximum number of contacts.
+		 */
 		static std::size_t max_contacts;
+		/**
+		 * Perception and mobility range size. Currently, only a range size of 1
+		 * is supported for generic graph based spatial models, but can be set
+		 * to arbitrary positive values for grid environments.
+		 */
 		static std::size_t range_size;
+		/**
+		 * Weight of edges between contacts.
+		 */
 		static float contact_weight;
+		/**
+		 * The MovePolicy used to chose where all agents need to move at each
+		 * time step.
+		 */
 		static MovePolicy move_policy;
 	private:
 		std::deque<DistributedId> _contacts;
 	protected:
+		/**
+		 * Non-const contacts() access, that can only be used internally during
+		 * agent behaviors.
+		 */
 		std::deque<DistributedId>& contacts();
 
 	public:
@@ -90,15 +143,41 @@ class MetaAgentBase {
 		 */
 		bool is_in_contacts(DistributedId id);
 
-		virtual const fpmas::api::model::AgentNode* node() const = 0;
+		/**
+		 * Returns a pointer to the node containing the agent.
+		 */
+		virtual const fpmas::api::model::AgentNode* agentNode() const = 0;
 	public:
+		/**
+		 * MetaAgentBase default constructor. The contacts list is initialized
+		 * empty.
+		 */
 		MetaAgentBase() {}
+		/**
+		 * MetaAgentBase constructor.
+		 *
+		 * @param contacts Initial list of contacts
+		 */
 		MetaAgentBase(const std::deque<DistributedId>& contacts)
 			: _contacts(contacts) {}
 
+		/**
+		 * Current contacts of the agent.
+		 */
 		const std::deque<DistributedId>& contacts() const;
 };
 
+/**
+ * Generic MetaAgentBase implementation.
+ *
+ * The create_relations_neighbors_group() and create_relations_from_contacts()
+ * are behaviors that can be used to make the graph of contacts evolve.
+ *
+ * @tparam AgentBase implemented agent interface
+ * (fpmas::api::model::GridAgent<...,> or fpmas::api::model::SpatialAgent<...,>)
+ * @tparam PerceptionRange type of mobility and perception range, according to
+ * the model type
+ */
 template<typename AgentBase, typename PerceptionRange>
 class MetaAgent : public AgentBase, public MetaAgentBase {
 	private:
@@ -111,16 +190,30 @@ class MetaAgent : public AgentBase, public MetaAgentBase {
 		void add_to_contacts(fpmas::api::model::Agent* agent);
 
 	public:
+		/**
+		 * MetaAgent default constructor.
+		 */
 		MetaAgent() : range(range_size) {}
+		/**
+		 * MetaAgent constructor.
+		 *
+		 * @param contacts Initial list of contacts
+		 */
 		MetaAgent(const std::deque<DistributedId>& contacts)
 			: MetaAgentBase(contacts), range(range_size) {}
 
+		/**
+		 * FPMAS mobility range set up.
+		 */
 		FPMAS_MOBILITY_RANGE(range);
+		/**
+		 * FPMAS perception range set up.
+		 */
 		FPMAS_PERCEPTION_RANGE(range);
 
 		/**
-		 * Pick an random agent in the current Moore neighborhood and adds it
-		 * to the contact list.
+		 * Picks a random agent in the current perceptions and adds it to the
+		 * contact list.
 		 *
 		 * If the list was full, the oldest contact is removed.
 		 */
@@ -145,14 +238,11 @@ class MetaAgent : public AgentBase, public MetaAgentBase {
 		 */
 		void handle_new_contacts();
 		/**
-		 * Moves to a random cell in the Moore neighborhood.
-		 *
-		 * The probability for each cell to be selected is proportional to its
-		 * _utility_.
+		 * Moves to the next cell according to the current MovePolicy.
 		 */
 		void move();
 
-		const fpmas::api::model::AgentNode* node() const override {
+		const fpmas::api::model::AgentNode* agentNode() const override {
 			return this->AgentBase::node();
 		}
 };
@@ -263,15 +353,36 @@ void MetaAgent<AgentBase, PerceptionRange>::move() {
 	this->moveTo(selected_cell);
 }
 
+/**
+ * MetaAgent JSON and ObjectPack serialization rules.
+ *
+ * Only the list of contacts needs to be serialized, all other fields are
+ * automatically handled by FPMAS.
+ */
 template<typename AgentType>
 struct MetaAgentSerialization {
-		static void to_json(nlohmann::json& j, const AgentType* agent);
-		static AgentType* from_json(const nlohmann::json& j);
+	/**
+	 * Json serialization.
+	 */
+	static void to_json(nlohmann::json& j, const AgentType* agent);
+	/**
+	 * Json deserialization.
+	 */
+	static AgentType* from_json(const nlohmann::json& j);
 
-		static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const AgentType* agent);
-		static void to_datapack(
-				fpmas::io::datapack::ObjectPack& o, const AgentType* agent);
-		static AgentType* from_datapack(const fpmas::io::datapack::ObjectPack& o);
+	/**
+	 * ObjectPack size.
+	 */
+	static std::size_t size(const fpmas::io::datapack::ObjectPack& o, const AgentType* agent);
+	/**
+	 * ObjectPack serialization.
+	 */
+	static void to_datapack(
+			fpmas::io::datapack::ObjectPack& o, const AgentType* agent);
+	/**
+	 * ObjectPack deserialization.
+	 */
+	static AgentType* from_datapack(const fpmas::io::datapack::ObjectPack& o);
 };
 
 template<typename AgentType>
@@ -302,6 +413,9 @@ AgentType* MetaAgentSerialization<AgentType>::from_datapack(
 	return new AgentType(o.get<std::deque<DistributedId>>());
 }
 
+/**
+ * MetaAgent for grid environments.
+ */
 class MetaGridAgent :
 	public MetaAgent<
 		GridAgent<MetaGridAgent, MetaGridCell>,
@@ -313,6 +427,9 @@ class MetaGridAgent :
 				MooreRange<MooreGrid<MetaGridCell>>>::MetaAgent;
 };
 
+/**
+ * MetaAgent for arbitrary graphs.
+ */
 class MetaGraphAgent :
 	public MetaAgent<
 		SpatialAgent<MetaGraphAgent, MetaGraphCell>, GraphRange<MetaGraphCell>

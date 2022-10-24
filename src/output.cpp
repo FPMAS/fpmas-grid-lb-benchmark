@@ -1,13 +1,13 @@
 #include "interactions.h"
 #include "metamodel.h"
 
-void dump_grid(
-		std::size_t grid_width, std::size_t grid_height,
-		std::vector<MetaGridCell*> local_cells) {
+void CellsUtilityOutput::dump() {
 	typedef std::pair<fpmas::model::DiscretePoint, float> CellView;
 	std::vector<CellView> local_cells_view;
-	for(auto cell : local_cells)
+	for(auto agent : model.cellGroup().localAgents()) {
+		auto cell = dynamic_cast<MetaGridCell*>(agent);
 		local_cells_view.push_back({cell->location(), cell->getUtility()});
+	}
 
 	fpmas::communication::TypedMpi<std::vector<CellView>> cell_mpi(fpmas::communication::WORLD);
 	auto global_cells = fpmas::communication::reduce(
@@ -28,35 +28,31 @@ void dump_grid(
 	}
 }
 
-void graph_stats_output(
+GraphStatsOutput::GraphStatsOutput(
 		BasicMetaModel& model,
 		std::string file_name
-		) {
-	fpmas::scheduler::Scheduler scheduler;
-	fpmas::runtime::Runtime runtime(scheduler);
-	fpmas::model::RandomLoadBalancing random_lb(fpmas::communication::WORLD);
-
-	float C = fpmas::graph::clustering_coefficient(
+		) :
+	fpmas::io::DistributedCsvOutput<
+		fpmas::io::Local<float>,
+		fpmas::io::Local<float>>(
+			model.getModel().getMpiCommunicator(), 0, output_file,
+			{"C", [&model] () -> float{
+			return fpmas::graph::clustering_coefficient(
 			model.getModel().graph(), fpmas::api::model::CELL_SUCCESSOR);
-	float L = fpmas::graph::characteristic_path_length(
+			}},
+			{ "L", [&model] () {
+			return fpmas::graph::characteristic_path_length(
 			model.getModel().graph(), fpmas::api::model::CELL_SUCCESSOR,
 			fpmas::model::local_agent_ids(model.cellGroup()));
-	
-	FPMAS_ON_PROC(model.getModel().getMpiCommunicator(), 0) {
-		fpmas::io::FileOutput csv_output(file_name);
-		fpmas::io::CsvOutput<float, float> graph_stats_csv(
-				csv_output,
-				{"C", [C] () {return C;}},
-				{"L", [L] () {return L;}}
-				);
-		graph_stats_csv.dump();
+			}}
+			),
+	output_file(file_name) {
 	}
-}
 
-LoadBalancingCsvOutput::LoadBalancingCsvOutput(
+MetaModelCsvOutput::MetaModelCsvOutput(
 		BasicMetaModel& metamodel,
-		fpmas::api::utils::perf::Probe& balance_probe,
-		fpmas::api::utils::perf::Probe& distribute_probe,
+		fpmas::api::utils::perf::Probe& lb_algorithm_probe,
+		fpmas::api::utils::perf::Probe& graph_balance_probe,
 		fpmas::api::utils::perf::Probe& local_read_probe,
 		fpmas::api::utils::perf::Probe& local_write_probe,
 		fpmas::api::utils::perf::Probe& distant_read_probe,
@@ -66,17 +62,36 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(
 		fpmas::io::FileOutput(
 				metamodel.getName() + ".%r.csv",
 				metamodel.getModel().getMpiCommunicator().getRank()),
-		LbCsvOutput(*this,
+		fpmas::io::CsvOutput<
+			fpmas::scheduler::Date, // Time Step
+			unsigned int, // Partitioning time
+			unsigned int, // Distribution time
+			float, // Local Agents
+			float, // Local cells
+			float, // Distant agent->agent edges
+			float, // Distant agent->cell edges
+			float, // Distant cell->cell edges
+			unsigned int, // LOCAL Cell->Cell read time
+			unsigned int, // LOCAL Cell->Cell read count
+			unsigned int, // LOCAL Cell->Cell write time
+			unsigned int, // LOCAL Cell->Cell write count
+			unsigned int, // DISTANT Cell->Cell read time
+			unsigned int, // DISTANT Cell->Cell read count
+			unsigned int, // DISTANT Cell->Cell write time
+			unsigned int, // DISTANT Cell->Cell write count
+			unsigned int // Sync time
+		>(*this,
 			{"TIME", [&metamodel] {return metamodel.getModel().runtime().currentDate();}},
 			{"BALANCE_TIME", [&monitor] {
 			auto result = std::chrono::duration_cast<std::chrono::microseconds>(
-					monitor.totalDuration("BALANCE")
+					monitor.totalDuration("LB_ALGORITHM")
 					).count();
 			return result;
 			}},
 			{"DISTRIBUTE_TIME", [&monitor] {
 			auto result = std::chrono::duration_cast<std::chrono::microseconds>(
-					monitor.totalDuration("DISTRIBUTE")
+					monitor.totalDuration("GRAPH_BALANCE")
+						- monitor.totalDuration("LB_ALGORITHM")
 					).count();
 			return result;
 			}},
@@ -109,15 +124,6 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(
 					if(edge->state() == fpmas::api::graph::DISTANT
 							&& dynamic_cast<MetaCell*>(edge->getTargetNode()->data().get()))
 						total_weight+=edge->getWeight();
-			return total_weight;
-			}},
-			{"LOCAL_CELL_EDGES", [&metamodel] {
-			float total_weight = 0;
-			for(auto cell : metamodel.cellGroup().localAgents())
-				for(auto edge : cell->node()->getOutgoingEdges())
-					if(edge->state() == fpmas::api::graph::LOCAL) {
-						total_weight+=edge->getWeight();
-					}
 			return total_weight;
 			}},
 			{"DISTANT_CELL_EDGES", [&metamodel] {
@@ -168,26 +174,27 @@ LoadBalancingCsvOutput::LoadBalancingCsvOutput(
 					monitor.totalDuration("SYNC")
 					).count();
 			}}
-), commit_probes_task([
-		&balance_probe, &distribute_probe,
+	), commit_probes_task([
+		&lb_algorithm_probe, &graph_balance_probe,
 		&local_read_probe, &local_write_probe,
 		&distant_read_probe, &distant_write_probe,
 		&sync_probe, &monitor
 	] () {
-	monitor.commit(balance_probe);
-	monitor.commit(distribute_probe);
-	monitor.commit(local_read_probe);
-	monitor.commit(local_write_probe);
-	monitor.commit(distant_read_probe);
-	monitor.commit(distant_write_probe);
-	monitor.commit(sync_probe);
+		monitor.commit(lb_algorithm_probe);
+		monitor.commit(graph_balance_probe);
+		monitor.commit(local_read_probe);
+		monitor.commit(local_write_probe);
+		monitor.commit(distant_read_probe);
+		monitor.commit(distant_write_probe);
+		monitor.commit(sync_probe);
 	}),
 	clear_monitor_task([&monitor] () {
-			monitor.clear();
-			}) {
+		monitor.clear();
+	}),
+	_jobs({commit_probes_job, this->job(), clear_monitor_job}){
 	}
 	
-CellsOutput::CellsOutput(BasicMetaModel& meta_model,
+CellsLocationOutput::CellsLocationOutput(BasicMetaModel& meta_model,
 		std::string filename,
 		std::size_t grid_width, std::size_t grid_height
 		) :
@@ -200,7 +207,7 @@ CellsOutput::CellsOutput(BasicMetaModel& meta_model,
 	meta_model(meta_model), grid_width(grid_width), grid_height(grid_height) {
 	}
 
-void CellsOutput::dump() {
+void CellsLocationOutput::dump() {
 	auto cells = gather_cells();
 	FPMAS_ON_PROC(meta_model.getModel().getMpiCommunicator(), 0) {
 		nlohmann::json j = cells;
@@ -208,7 +215,7 @@ void CellsOutput::dump() {
 	}
 }
 
-std::vector<std::vector<int>> CellsOutput::gather_cells() {
+std::vector<std::vector<int>> CellsLocationOutput::gather_cells() {
 	typedef std::pair<fpmas::model::DiscretePoint, int> CellLocation;
 
 	std::vector<fpmas::api::model::Agent*> local_cells
@@ -238,9 +245,9 @@ std::vector<std::vector<int>> CellsOutput::gather_cells() {
 }
 
 MetaAgentView::MetaAgentView(const MetaAgentBase* agent) :
-	id(agent->node()->getId()),
+	id(agent->agentNode()->getId()),
 	contacts(agent->contacts()) {
-		for(auto perception : agent->node()->getOutgoingEdges(fpmas::api::model::PERCEPTION))
+		for(auto perception : agent->agentNode()->getOutgoingEdges(fpmas::api::model::PERCEPTION))
 			perceptions.push_back(perception->getTargetNode()->getId());
 	}
 
@@ -263,16 +270,15 @@ AgentsOutputView::AgentsOutputView(
 }
 
 AgentsOutput::AgentsOutput(
-		BasicMetaModel& meta_model,
-		std::string lb_algorithm,
+		BasicMetaModel& model,
 		std::size_t grid_width, std::size_t grid_height
 		) :
 	fpmas::io::JsonOutput<AgentsOutputView>(
-			output_file, [this, &meta_model, grid_width, grid_height] () {
+			output_file, [this, &model, grid_width, grid_height] () {
 
 			std::vector<MetaGridAgentView> local_agents;
 			std::vector<DistantAgentView> distant_agents;
-			for(auto agent : meta_model.agentGroup().agents())
+			for(auto agent : model.agentGroup().agents())
 				switch(agent->node()->state()) {
 					case fpmas::api::graph::LOCAL:
 						local_agents.emplace_back(
@@ -284,16 +290,15 @@ AgentsOutput::AgentsOutput(
 					break;
 				}
 			return AgentsOutputView(
-					meta_model.getModel().getMpiCommunicator().getRank(),
+					model.getModel().getMpiCommunicator().getRank(),
 					grid_width, grid_height, local_agents, distant_agents
 					);
 			}
 			),
 	output_file(
-			lb_algorithm + "_agents.%r.%t.json",
-			meta_model.getModel().getMpiCommunicator(), meta_model.getModel().runtime()
-			),
-	meta_model(meta_model), grid_width(grid_width), grid_height(grid_height) {
+			model.getName() + "_agents.%r.%t.json",
+			model.getModel().getMpiCommunicator(), model.getModel().runtime()
+			) {
 	}
 
 namespace nlohmann {

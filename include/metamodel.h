@@ -6,46 +6,87 @@
 #include "dot.h"
 #include "probe.h"
 
+/**
+ * @file metamodel.h
+ * Contains MetaModel related features.
+ */
+
+/**
+ * Generic MetaModel interface, without template.
+ */
 class BasicMetaModel {
 	public:
+		/**
+		 * Name of the model.
+		 */
 		virtual std::string getName() const = 0;
+		/**
+		 * Generic model instance.
+		 */
 		virtual fpmas::api::model::Model& getModel() = 0;
+		/**
+		 * Agent group containing the Cell network.
+		 */
 		virtual fpmas::api::model::AgentGroup& cellGroup() = 0;
+		/**
+		 * Agent group containing Spatial Agents.
+		 */
 		virtual fpmas::api::model::AgentGroup& agentGroup() = 0;
+		/**
+		 * Can be used to perform a model output in a DOT file.
+		 */
 		virtual DotOutput& getDotOutput() = 0;
 
+		/**
+		 * Initializes the Cell network and Spatial Agents.
+		 */
 		virtual BasicMetaModel* init() = 0;
+		/**
+		 * Runs the MetaModel.
+		 */
 		virtual void run() = 0;
 
 		virtual ~BasicMetaModel() {
 		}
 };
 
-template<typename BaseModel, typename CellType, typename AgentType>
+/**
+ * Generic MetaModel implementation, with features that are common for both
+ * MetaGraphModel and MetaGridModel. The MetaModel class cannot be used on its
+ * own.
+ *
+ * @tparam BaseModel The concrete underlying spatial model type, such as
+ * SpatialModel<...> or GridModel<...>
+ * @tparam AgentType The concrete type of Spatial Agents, such as
+ * SpatialAgent<...> or GridAgent<...>
+ */
+template<typename BaseModel, typename AgentType>
 class MetaModel : public BasicMetaModel {
 	private:
+		typedef typename BaseModel::CellType CellType;
+
 		// Cell behaviors
 		fpmas::model::IdleBehavior idle_behavior;
-		Behavior<MetaSpatialCell> cell_update_edge_weights_behavior {
-			&MetaSpatialCell::update_edge_weights
+		Behavior<MetaCell> cell_update_edge_weights_behavior {
+			&MetaCell::update_edge_weights
 		};
-		Behavior<MetaSpatialCell> cell_read_all_cell_behavior {
-			&MetaSpatialCell::read_all_cell
+		Behavior<MetaCell> cell_read_all_cell_behavior {
+			&MetaCell::read_all_cell
 		};
-		Behavior<MetaSpatialCell> cell_write_all_cell_behavior {
-			&MetaSpatialCell::write_all_cell
+		Behavior<MetaCell> cell_write_all_cell_behavior {
+			&MetaCell::write_all_cell
 		};
-		Behavior<MetaSpatialCell> cell_read_one_cell_behavior {
-			&MetaSpatialCell::read_one_cell
+		Behavior<MetaCell> cell_read_one_cell_behavior {
+			&MetaCell::read_one_cell
 		};
-		Behavior<MetaSpatialCell> cell_write_one_cell_behavior {
-			&MetaSpatialCell::write_one_cell
+		Behavior<MetaCell> cell_write_one_cell_behavior {
+			&MetaCell::write_one_cell
 		};
-		Behavior<MetaSpatialCell> cell_read_all_write_one_cell_behavior {
-			&MetaSpatialCell::read_all_write_one_cell
+		Behavior<MetaCell> cell_read_all_write_one_cell_behavior {
+			&MetaCell::read_all_write_one_cell
 		};
-		Behavior<MetaSpatialCell> cell_read_all_write_all_cell_behavior {
-			&MetaSpatialCell::read_all_write_all_cell
+		Behavior<MetaCell> cell_read_all_write_all_cell_behavior {
+			&MetaCell::read_all_write_all_cell
 		};
 
 		// Agent behaviors
@@ -68,39 +109,69 @@ class MetaModel : public BasicMetaModel {
 		fpmas::scheduler::Job sync_graph {{sync_graph_task}};
 
 	protected:
+		/**
+		 * Spatial model instance.
+		 */
 		BaseModel model;
 
 	private:
 		std::string name;
 		fpmas::utils::perf::Monitor monitor;
 
-		fpmas::utils::perf::Probe balance_probe {"BALANCE"};
+		fpmas::utils::perf::Probe lb_algorithm_probe {"LB_ALGORITHM"};
 		fpmas::utils::perf::Probe sync_probe {"SYNC"};
-		fpmas::utils::perf::Probe distribute_probe {"DISTRIBUTE"};
+		fpmas::utils::perf::Probe graph_balance_probe {"GRAPH_BALANCE"};
 
-		LoadBalancingProbe lb_probe;
+		GraphBalanceProbe graph_balance_probe_job;
 		SyncProbeTask sync_probe_task;
 
-		LoadBalancingCsvOutput csv_output;
-		CellsOutput cells_output;
+		MetaModelCsvOutput csv_output;
+		CellsLocationOutput cells_location_output;
+		CellsUtilityOutput cells_utility_output;
 		AgentsOutput agents_output;
 		DotOutput dot_output;
-		BenchmarkConfig config;
+		ModelConfig config;
 
 	protected:
-		virtual void buildCells(const BenchmarkConfig& config) = 0;
-		virtual void buildAgents(const BenchmarkConfig& config) = 0;
+		/**
+		 * Method used to build the Cell network.
+		 *
+		 * @param config Model configuration
+		 */
+		virtual void buildCells(const ModelConfig& config) = 0;
+		/**
+		 * Method used to build Spatial Agents and place them on the Cell
+		 * network.
+		 *
+		 * @param config Model configuration
+		 */
+		virtual void buildAgents(const ModelConfig& config) = 0;
 
 	public:
+		/**
+		 * MetaModel constructor.
+		 *
+		 * @param name Name of the model
+		 * @param config Model configuration
+		 * @param scheduler Scheduler on which agent execution, load balancing
+		 * and outputs are planned
+		 * @param runtime Runtime used to execute the MetaModel
+		 * @param lb_algorithm Load balancing algorithm to apply to the
+		 * MetaModel
+		 * @param lb_period Period at which the load balancing algorithm should
+		 * be applied, starting at time step 0
+		 */
 		MetaModel(
-				std::string name, BenchmarkConfig config,
+				std::string name, ModelConfig config,
 				fpmas::api::scheduler::Scheduler& scheduler,
 				fpmas::api::runtime::Runtime& runtime,
 				fpmas::api::model::LoadBalancing& lb_algorithm,
 				fpmas::scheduler::TimeStep lb_period
 				);
 
-		MetaModel<BaseModel, CellType, AgentType>* init() override;
+		// BasicMetaModel implementation //
+
+		MetaModel<BaseModel, AgentType>* init() override;
 
 		void run() override {
 			model.runtime().run(config.num_steps);
@@ -127,9 +198,9 @@ class MetaModel : public BasicMetaModel {
 		}
 };
 
-template<typename BaseModel, typename CellType, typename AgentType>
-MetaModel<BaseModel, CellType, AgentType>::MetaModel(
-		std::string name, BenchmarkConfig config,
+template<typename BaseModel, typename AgentType>
+MetaModel<BaseModel, AgentType>::MetaModel(
+		std::string name, ModelConfig config,
 		fpmas::api::scheduler::Scheduler& scheduler,
 		fpmas::api::runtime::Runtime& runtime,
 		fpmas::api::model::LoadBalancing& lb_algorithm,
@@ -137,20 +208,22 @@ MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 		) :
 	name(name),
 	model(scheduler, runtime, lb_algorithm),
-	lb_probe(balance_probe, distribute_probe, model.graph(), lb_algorithm),
+	graph_balance_probe_job(
+			model.graph(), lb_algorithm, lb_algorithm_probe, graph_balance_probe),
 	csv_output(
 			*this,
-			balance_probe,
-			distribute_probe,
-			ReaderWriter<CellType, CellType>::local_read_probe,
-			ReaderWriter<CellType, CellType>::local_write_probe,
-			ReaderWriter<CellType, CellType>::distant_read_probe,
-			ReaderWriter<CellType, CellType>::distant_write_probe,
+			lb_algorithm_probe,
+			graph_balance_probe,
+			ReaderWriter::local_read_probe,
+			ReaderWriter::local_write_probe,
+			ReaderWriter::distant_read_probe,
+			ReaderWriter::distant_write_probe,
 			sync_probe,
 			monitor),
 	sync_probe_task(sync_probe, model.graph()),
-	cells_output(*this, this->name, config.grid_width, config.grid_height),
-	agents_output(*this, this->name, config.grid_width, config.grid_height),
+	cells_location_output(*this, this->name, config.grid_width, config.grid_height),
+	cells_utility_output(*this, config.grid_width, config.grid_height),
+	agents_output(*this, config.grid_width, config.grid_height),
 	dot_output(*this, this->name + ".%t"),
 	config(config) {
 		switch(config.cell_interactions) {
@@ -211,7 +284,7 @@ MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 				);
 
 	
-		scheduler.schedule(0, lb_period, lb_probe.job);
+		scheduler.schedule(0, lb_period, graph_balance_probe_job.job);
 		if(config.occupation_rate > 0.0) {
 			if(config.agent_interactions == AgentInteractions::CONTACTS) {
 				scheduler.schedule(
@@ -240,9 +313,7 @@ MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 			model.getGroup(CELL_GROUP).agentExecutionJob().setEndTask(sync_probe_task);
 			scheduler.schedule(0.25, 1, model.getGroup(CELL_GROUP).jobs());
 		}
-		scheduler.schedule(0.30, 1, csv_output.commit_probes_job);
-		scheduler.schedule(0.31, 1, csv_output.job());
-		scheduler.schedule(0.32, 1, csv_output.clear_monitor_job);
+		scheduler.schedule(0.30, 1, csv_output.jobs());
 
 		fpmas::scheduler::TimeStep last_lb_date
 			= ((config.num_steps-1) / lb_period) * lb_period;
@@ -250,14 +321,17 @@ MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 		if(config.json_output && config.environment == Environment::GRID) {
 			if(config.json_output_period > 0) {
 				// JSON cell output
-				scheduler.schedule(0.33, config.json_output_period, cells_output.job());
+				scheduler.schedule(0.33, config.json_output_period, cells_location_output.job());
 				// JSON agent output
 				if(config.occupation_rate > 0.0)
 					scheduler.schedule(0.34, config.json_output_period, agents_output.job());
 
 			} else {
+				// If json_output_period <= 0, the json output is only performed
+				// at the end of the simulation.
+
 				// JSON cell output
-				scheduler.schedule(last_lb_date + 0.02, cells_output.job());
+				scheduler.schedule(last_lb_date + 0.02, cells_location_output.job());
 				// JSON agent output
 				if(config.occupation_rate > 0.0)
 					scheduler.schedule(last_lb_date + 0.03, agents_output.job());
@@ -269,8 +343,8 @@ MetaModel<BaseModel, CellType, AgentType>::MetaModel(
 			scheduler.schedule(last_lb_date + 0.04, dot_output.job());
 }
 
-template<typename BaseModel, typename CellType, typename AgentType>
-MetaModel<BaseModel, CellType, AgentType>* MetaModel<BaseModel, CellType, AgentType>::init() {
+template<typename BaseModel, typename AgentType>
+MetaModel<BaseModel, AgentType>* MetaModel<BaseModel, AgentType>::init() {
 	buildCells(config);
 	model.graph().synchronize();
 
@@ -286,24 +360,49 @@ MetaModel<BaseModel, CellType, AgentType>* MetaModel<BaseModel, CellType, AgentT
 	return this;
 }
 
+/**
+ * A generic MetaModel extension where Spatial Agents are moving on a Moore grid.
+ */
 template<template<typename> class SyncMode>
 class MetaGridModel :
-	public MetaModel<
-		GridModel<SyncMode, MetaGridCell>,
-		MetaGridCell, MetaGridAgent
-	> {
+	public MetaModel<GridModel<SyncMode, MetaGridCell>, MetaGridAgent> {
 		public:
-			using MetaModel<
-				GridModel<SyncMode, MetaGridCell>,
-				MetaGridCell, MetaGridAgent
-					>::MetaModel;
+			using MetaModel<GridModel<SyncMode, MetaGridCell>, MetaGridAgent>
+				::MetaModel;
 
-			void buildCells(const BenchmarkConfig& config) override;
-			void buildAgents(const BenchmarkConfig& config) override;
+			/**
+			 * Builds a grid of size `config.grid_width*config.grid_height`.
+			 *
+			 * A utility is assigned to each cell, according to the
+			 * `config.utility` value:
+			 * - Utility::UNIFORM: UniformUtility
+			 * - Utility::LINEAR: LinearUtility
+			 * - Utility::INVERSE: InverseUtility
+			 * - Utility::STEP: StepUtility
+			 *
+			 * GridAttractors are defined from `config.grid_attractors`. See
+			 * MetaGridCell factory for more detailed information.
+			 *
+			 * If config.json_output is true, a `grid.json` file describing
+			 * the utility of Cells is built.
+			 *
+			 * @param config Model configuration
+			 */
+			void buildCells(const ModelConfig& config) override;
+
+			/**
+			 * Builds GridAgents on the grid.
+			 *
+			 * A total of `grid_size*config.occupation_rate` Agents are
+			 * initialized randomly and uniformly on the grid.
+			 *
+			 * @param config Model configuration
+			 */
+			void buildAgents(const ModelConfig& config) override;
 };
 
 template<template<typename> class SyncMode>
-void MetaGridModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
+void MetaGridModel<SyncMode>::buildCells(const ModelConfig& config) {
 	std::unique_ptr<UtilityFunction> utility_function;
 	switch(config.utility) {
 		case Utility::UNIFORM:
@@ -328,11 +427,12 @@ void MetaGridModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
 		cell_groups.push_back(this->model.getGroup(CELL_GROUP));
 	auto local_cells = grid.build(this->model, cell_groups);
 	if(config.json_output)
-		dump_grid(config.grid_width, config.grid_height, local_cells);
+		CellsUtilityOutput(*this, config.grid_width, config.grid_height)
+			.dump();
 }
 
 template<template<typename> class SyncMode>
-void MetaGridModel<SyncMode>::buildAgents(const BenchmarkConfig& config) {
+void MetaGridModel<SyncMode>::buildAgents(const ModelConfig& config) {
 	fpmas::model::UniformGridAgentMapping mapping(
 			config.grid_width, config.grid_height,
 			config.grid_width * config.grid_height * config.occupation_rate
@@ -351,24 +451,49 @@ void MetaGridModel<SyncMode>::buildAgents(const BenchmarkConfig& config) {
 			agent_factory, mapping);
 }
 
+/**
+ * A generic MetaModel extension where Spatial Agents are moving on an arbitrary
+ * graph.
+ *
+ * Agents randomly move to out neighbors of their location cells.
+ */
 template<template<typename> class SyncMode>
 class MetaGraphModel :
-	public MetaModel<
-		SpatialModel<SyncMode, MetaGraphCell>,
-		MetaGraphCell, MetaGraphAgent
-	> {
+	public MetaModel<SpatialModel<SyncMode, MetaGraphCell>, MetaGraphAgent> {
 		public:
-			using MetaModel<
-				SpatialModel<SyncMode, MetaGraphCell>,
-				MetaGraphCell, MetaGraphAgent
-					>::MetaModel;
+			using MetaModel<SpatialModel<SyncMode, MetaGraphCell>, MetaGraphAgent>
+				::MetaModel;
 
-			void buildCells(const BenchmarkConfig& config) override;
-			void buildAgents(const BenchmarkConfig& config) override;
+			/**
+			 * Builds a graph according to the specified `config.environment`:
+			 * - SMALL_WORLD
+			 * - RANDOM
+			 * - CLUSTERED
+			 * In any case, `config.num_cells` nodes are built, with an average
+			 * output degree of `config.output_degree`.
+			 *
+			 * The parameter `config.p` is passed to the SMALL_WORLD graph
+			 * builder to determine the proportion of edges to relink in the
+			 * Small-World build process.
+			 *
+			 * @param config Model configuration
+			 */
+			void buildCells(const ModelConfig& config) override;
+
+			/**
+			 * Builds GraphAgents on the spatial graph.
+			 *
+			 * A total of
+			 * `num_cells*config.occupation_rate` agents are randomly and
+			 * uniformly initialized on the spatial graph.
+			 *
+			 * @param config Model configuration
+			 */
+			void buildAgents(const ModelConfig& config) override;
 	};
 
 template<template<typename> class SyncMode>
-void MetaGraphModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
+void MetaGraphModel<SyncMode>::buildCells(const ModelConfig& config) {
 	fpmas::random::PoissonDistribution<std::size_t> edge_dist(config.output_degree);
 	fpmas::api::graph::DistributedGraphBuilder<fpmas::model::AgentPtr>* builder;
 	switch(config.environment) {
@@ -403,7 +528,7 @@ void MetaGraphModel<SyncMode>::buildCells(const BenchmarkConfig& config) {
 }
 
 template<template<typename> class SyncMode>
-void MetaGraphModel<SyncMode>::buildAgents(const BenchmarkConfig& config) {
+void MetaGraphModel<SyncMode>::buildAgents(const ModelConfig& config) {
 	fpmas::model::UniformAgentMapping mapping(
 			this->getModel().getMpiCommunicator(),
 			this->cellGroup(),
@@ -422,16 +547,39 @@ void MetaGraphModel<SyncMode>::buildAgents(const BenchmarkConfig& config) {
 			agent_factory, mapping);
 }
 
+/**
+ * A factory class used to instantiate MetaGridModel and MetaGraphCell instances
+ * depending on the specified Environment and SyncMode.
+ */
 struct MetaModelFactory {
 	private:
 		Environment environment;
 		SyncMode sync_mode;
 
 	public:
+		/**
+		 * MetaModelFactory constructor.
+		 *
+		 * @param environment Environment type of the built MetaModel
+		 * @param sync_mode Synchronization mode used by the built MetaModel
+		 */
 		MetaModelFactory(Environment environment, SyncMode sync_mode);
 
+		/**
+		 * Builds a MetaModel instance from the specified parameters.
+		 *
+		 * @param name Name of the model
+		 * @param config Model configuration
+		 * @param scheduler Scheduler instance used by the MetaModel to plan
+		 * agent execution
+		 * @param runtime Runtime instance used to execute the MetaModel
+		 * @param lb_algorithm Load balancing algorithm to apply to the
+		 * MetaModel
+		 * @param lb_period Period at which the load balancing algorithm should
+		 * be scheduled, starting at time step 0
+		 */
 		BasicMetaModel* build(
-				std::string lb_algorithm_name, BenchmarkConfig config,
+				std::string name, ModelConfig config,
 				fpmas::api::scheduler::Scheduler& scheduler,
 				fpmas::api::runtime::Runtime& runtime,
 				fpmas::api::model::LoadBalancing& lb_algorithm,

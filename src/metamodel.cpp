@@ -6,7 +6,7 @@ MetaModelFactory::MetaModelFactory(Environment environment, SyncMode sync_mode)
 
 #define BUILD_MODEL(MODEL, SYNCHRO)\
 	return new MODEL<fpmas::synchro::SYNCHRO>(\
-			lb_algorithm_name, config, scheduler, runtime,\
+			name, config, scheduler, runtime,\
 			lb_algorithm, lb_period\
 			);
 
@@ -23,7 +23,7 @@ MetaModelFactory::MetaModelFactory(Environment environment, SyncMode sync_mode)
 	}
 
 BasicMetaModel* MetaModelFactory::build(
-		std::string lb_algorithm_name, BenchmarkConfig config,
+		std::string name, ModelConfig config,
 		fpmas::api::scheduler::Scheduler& scheduler,
 		fpmas::api::runtime::Runtime& runtime,
 		fpmas::api::model::LoadBalancing& lb_algorithm,

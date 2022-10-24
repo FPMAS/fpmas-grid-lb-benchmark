@@ -59,8 +59,8 @@ int main(int argc, char** argv) {
 			MetaModelFactory model_factory(
 					graph_config.environment, SyncMode::GHOST_MODE);
 
-			// Building a fake BenchmarkConfig
-			BenchmarkConfig benchmark_config(graph_config);
+			// Building a fake ModelConfig
+			ModelConfig benchmark_config(graph_config);
 			// No agents
 			benchmark_config.occupation_rate = 0.0;
 			// Build cells with a uniform utility, even if unused
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 
 			if(!init_only)
 				// CSV output = Clustering coefficient and characteristic path length
-				graph_stats_output(*model, env_name + ".csv");
+				GraphStatsOutput(*model, env_name + ".csv").dump();
 
 			delete model;
 		}
