@@ -2,7 +2,6 @@
 
 #include "fpmas/api/model/model.h"
 #include "fpmas/io/output.h"
-#include <nlohmann/adl_serializer.hpp>
 
 class BasicMetaModel;
 

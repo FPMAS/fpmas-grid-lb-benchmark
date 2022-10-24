@@ -2,7 +2,6 @@
 
 #include "config.h"
 #include "interactions.h"
-#include <fpmas/random/generator.h>
 
 using namespace fpmas::model;
 

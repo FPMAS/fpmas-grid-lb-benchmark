@@ -2,7 +2,6 @@
 
 #include "fpmas/io/json_output.h"
 #include "agent.h"
-#include <fpmas/io/output.h>
 
 /**
  * @file output.h

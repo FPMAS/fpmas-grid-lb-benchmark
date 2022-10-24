@@ -1,7 +1,7 @@
 #pragma once
+
 #include "fpmas.h"
 #include "fpmas/utils/perf.h"
-#include <fpmas/api/graph/location_state.h>
 
 /**
  * @file interactions.h

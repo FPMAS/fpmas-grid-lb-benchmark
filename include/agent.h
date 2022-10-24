@@ -2,7 +2,6 @@
 
 #include "fpmas.h"
 #include "cell.h"
-#include <fpmas/api/graph/location_state.h>
 
 /**
  * @file agent.h
