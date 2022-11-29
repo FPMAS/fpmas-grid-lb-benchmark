@@ -1,7 +1,7 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structUtilityFunction.html" title=" " alt="" coords="5,81,112,108"/>
-<area shape="rect" id="node2" href="$classInverseUtility.html" title=" " alt="" coords="162,5,261,32"/>
-<area shape="rect" id="node3" href="$structLinearUtility.html" title=" " alt="" coords="166,56,257,83"/>
-<area shape="rect" id="node4" href="$structStepUtility.html" title=" " alt="" coords="170,107,253,133"/>
-<area shape="rect" id="node5" href="$structUniformUtility.html" title=" " alt="" coords="160,157,263,184"/>
+<area shape="rect" id="node1" href="$structUtilityFunction.html" title=" " coords="5,80,112,105"/>
+<area shape="rect" id="node2" href="$classInverseUtility.html" title=" " coords="162,5,261,31"/>
+<area shape="rect" id="node3" href="$structLinearUtility.html" title=" " coords="166,55,257,80"/>
+<area shape="rect" id="node4" href="$structStepUtility.html" title=" " coords="170,104,253,129"/>
+<area shape="rect" id="node5" href="$structUniformUtility.html" title=" " coords="160,153,263,179"/>
 </map>

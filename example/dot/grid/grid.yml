@@ -1,0 +1,31 @@
+# Graph environment: SMALL_WORLD, RANDOM, CLUSTERED
+environment: GRID
+grid_width: 10
+grid_height: 10
+
+# Used to compute the agent count, so that N_agent=occupation_rate*cell_count
+occupation_rate: 0.2
+
+# Number of steps to execute
+num_steps: 10
+
+# Cell utility distribution policy: UNIFORM, LINEAR, INVERSE or STEP
+utility: STEP
+
+# Zoltan IMBALANCE_TOL parameter
+zoltan_imbalance_tol: 1.1
+
+# If utility is not UNIFORM, defines a list of attractors.
+# An attractor is defined as [[x, y], radius]
+grid_attractors: 
+  - [[2, 2], 4]
+
+# Test cases list
+# A Test case is defined as [ALGORITHM, [lb_periods, ...]]
+# Available algorithms:
+# SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, STATIC_ZOLTAN_CELL_LB, RANDOM_LB
+test_cases:
+  - [STATIC_ZOLTAN_CELL_LB, [1]]
+
+# Performs a generic DOT output of the graph at the end of the simulation
+dot_output: true

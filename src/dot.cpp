@@ -15,7 +15,7 @@ const std::string set19_color_scheme[9] {
 };
 
 std::string rgb_color_with_alpha(const std::string& color, float alpha) {
-	unsigned int alpha_int = alpha*255;
+	unsigned int alpha_int = std::min(alpha, 1.0f)*255;
 	std::ostringstream str;
 	str << color << std::hex << std::left << std::setfill('0') << std::setw(2) << alpha_int;
 	return str.str();
@@ -117,15 +117,18 @@ void DotOutput::dump() {
 			if(node.is_location)
 				file
 					<< "height=.3,width=.3,"
-					<< "shape=diamond,";
+					<< "shape=diamond,"
+					<< "fillcolor=\"" << rgb_color_with_alpha(
+							set19_color_scheme[node.rank%9], node.utility
+							) << "\",";
 			else
 				file
-					<< "height=.5,width=.5,";
+					<< "height=.5,width=.5,"
+					<< "fillcolor=\"" << rgb_color_with_alpha(
+							set19_color_scheme[node.rank%9], 0.5 
+							) << "\",";
 			file
 				<< "style=filled,"
-				<< "fillcolor=\"" << rgb_color_with_alpha(
-						set19_color_scheme[node.rank%9], node.utility
-						) << "\","
 				<< "color=\"" << set19_color_scheme[node.rank%9] << "\""
 				<< "];" << std::endl;
 		}

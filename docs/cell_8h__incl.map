@@ -1,11 +1,11 @@
 <map id="include/cell.h" name="include/cell.h">
-<area shape="rect" id="node1" title=" " alt="" coords="495,5,594,32"/>
-<area shape="rect" id="node2" href="$config_8h.html" title=" " alt="" coords="357,80,425,107"/>
-<area shape="rect" id="node7" href="$interactions_8h.html" title=" " alt="" coords="648,80,748,107"/>
-<area shape="rect" id="node3" title=" " alt="" coords="5,162,124,189"/>
-<area shape="rect" id="node4" title=" " alt="" coords="149,155,287,196"/>
-<area shape="rect" id="node5" title=" " alt="" coords="311,155,471,196"/>
-<area shape="rect" id="node6" title=" " alt="" coords="495,162,639,189"/>
-<area shape="rect" id="node8" title=" " alt="" coords="663,162,733,189"/>
-<area shape="rect" id="node9" title=" " alt="" coords="757,162,879,189"/>
+<area shape="rect" id="node1" title=" " coords="495,5,594,31"/>
+<area shape="rect" id="node2" href="$config_8h.html" title=" " coords="357,79,425,104"/>
+<area shape="rect" id="node7" href="$interactions_8h.html" title=" " coords="648,79,748,104"/>
+<area shape="rect" id="node3" title=" " coords="5,159,124,185"/>
+<area shape="rect" id="node4" title=" " coords="149,152,287,192"/>
+<area shape="rect" id="node5" title=" " coords="311,152,471,192"/>
+<area shape="rect" id="node6" title=" " coords="495,159,639,185"/>
+<area shape="rect" id="node8" title=" " coords="663,159,733,185"/>
+<area shape="rect" id="node9" title=" " coords="757,159,879,185"/>
 </map>

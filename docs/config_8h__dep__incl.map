@@ -1,7 +1,7 @@
 <map id="include/config.h" name="include/config.h">
-<area shape="rect" id="node1" title=" " alt="" coords="20,5,133,32"/>
-<area shape="rect" id="node2" href="$cell_8h.html" title=" " alt="" coords="27,80,126,107"/>
-<area shape="rect" id="node3" href="$agent_8h.html" title=" " alt="" coords="21,155,132,181"/>
-<area shape="rect" id="node4" href="$output_8h.html" title=" " alt="" coords="19,229,134,256"/>
-<area shape="rect" id="node5" href="$metamodel_8h.html" title=" " alt="" coords="5,304,148,331"/>
+<area shape="rect" id="node1" title=" " coords="20,5,133,31"/>
+<area shape="rect" id="node2" href="$cell_8h.html" title=" " coords="27,79,126,104"/>
+<area shape="rect" id="node3" href="$agent_8h.html" title=" " coords="21,152,132,177"/>
+<area shape="rect" id="node4" href="$output_8h.html" title=" " coords="19,225,134,251"/>
+<area shape="rect" id="node5" href="$metamodel_8h.html" title=" " coords="5,299,148,324"/>
 </map>

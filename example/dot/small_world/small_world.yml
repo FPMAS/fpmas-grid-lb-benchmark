@@ -1,0 +1,26 @@
+# Graph environment: SMALL_WORLD, RANDOM, CLUSTERED
+environment: SMALL_WORLD
+num_cells: 100
+output_degree: 6
+
+# For SMALL_WORLD environment: probability to relink each edge
+p: 0.1
+
+# Used to compute the agent count, so that N_agent=occupation_rate*cell_count
+occupation_rate: 0.2
+
+# Number of steps to execute
+num_steps: 10
+
+# Zoltan IMBALANCE_TOL parameter
+zoltan_imbalance_tol: 1.1
+
+# Test cases list
+# A Test case is defined as [ALGORITHM, [lb_periods, ...]]
+# Available algorithms:
+# SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, STATIC_ZOLTAN_CELL_LB, RANDOM_LB
+test_cases:
+  - [STATIC_ZOLTAN_CELL_LB, [1]]
+
+# Performs a generic DOT output of the graph at the end of the simulation
+dot_output: true

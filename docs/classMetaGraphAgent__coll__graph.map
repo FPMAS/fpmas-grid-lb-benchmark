@@ -1,7 +1,7 @@
 <map id="MetaGraphAgent" name="MetaGraphAgent">
-<area shape="rect" id="node1" title=" " alt="" coords="551,79,671,106"/>
-<area shape="rect" id="node2" title=" " alt="" coords="264,27,503,83"/>
-<area shape="rect" id="node3" title=" " alt="" coords="5,5,216,47"/>
-<area shape="rect" id="node4" href="$classMetaAgentBase.html" title=" " alt="" coords="53,71,168,98"/>
-<area shape="rect" id="node5" title=" " alt="" coords="305,108,461,149"/>
+<area shape="rect" id="node1" title=" " coords="551,77,671,102"/>
+<area shape="rect" id="node2" title=" " coords="264,26,503,81"/>
+<area shape="rect" id="node3" title=" " coords="5,5,216,45"/>
+<area shape="rect" id="node4" href="$classMetaAgentBase.html" title=" " coords="53,70,168,95"/>
+<area shape="rect" id="node5" title=" " coords="305,105,461,145"/>
 </map>

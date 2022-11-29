@@ -3,13 +3,15 @@ environment: GRID
 grid_width: 100
 grid_height: 100
 
-# Graph environment
+# Graph environment: SMALL_WORLD, RANDOM, CLUSTERED
 #environment: SMALL_WORLD
 #num_cells: 1000
 #output_degree: 6
+
+# For SMALL_WORLD environment: probability to relink each edge
 #p: 0.1
 
-# Used to compute the agent count
+# Used to compute the agent count, so that N_agent=occupation_rate*cell_count
 occupation_rate: 0.5
 
 # Number of steps to execute
@@ -27,8 +29,14 @@ cell_weight: 1.
 # to the count of agents currently located in the cell
 dynamic_cell_edge_weights: false
 
+# Cell interactions scheme: NONE, READ_ALL, READ_ONE, WRITE_ALL, WRITE_ONE,
+# READ_ALL_WRITE_ONE, READ_ALL_WRITE_ONE
 cell_interactions: NONE
+# Synchronization mode used to perform cell interactions: GHOST_MODE,
+# GLOBAL_GHOST_MODE, HARD_SYNC_MODE, 
 sync_mode: HARD_SYNC_MODE
+# Fake cell data size, that can be used to increase the size of messages
+# required to send cells over MPI
 cell_size: 16
 
 # BenchmarkAgents node weight
@@ -50,8 +58,10 @@ MetaAgentBase:
   max_contacts: 10
 
 MetaCell:
+  # Default weight of edges between cells
   cell_edge_weight: 1.0
 
+# Zoltan IMBALANCE_TOL parameter
 zoltan_imbalance_tol: 1.1
 
 # If utility is not UNIFORM, defines a list of attractors.
@@ -63,15 +73,19 @@ grid_attractors:
 # Test cases list
 # A Test case is defined as [ALGORITHM, [lb_periods, ...]]
 # Available algorithms:
-# SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, RANDOM_LB
+# SCHEDULED_LB, ZOLTAN_LB, GRID_LB, ZOLTAN_CELL_LB, STATIC_ZOLTAN_CELL_LB, RANDOM_LB
 test_cases:
-  - [SCHEDULED_LB, [10, 50]]
+  #- [SCHEDULED_LB, [10, 50]]
   - [ZOLTAN_LB, [1, 10, 50]]
   - [GRID_LB, [1, 10]]
   - [ZOLTAN_CELL_LB, [1, 10, 50]]
   - [STATIC_ZOLTAN_CELL_LB, [1, 10]]
-  - [RANDOM_LB, [50]]
+  #- [RANDOM_LB, [50]]
 
+# For GRID environment, performs a cell locations and agents JSON output
 json_output: false
+# Period at which the JSON output is performed. If json_output_period<=0, then
+# the output is only performed at the end of the simulation
 json_output_period: 1
+# Performs a generic DOT output of the graph at the end of the simulation
 dot_output: false

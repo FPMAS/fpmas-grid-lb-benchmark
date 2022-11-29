@@ -1,8 +1,8 @@
 <map id="BasicMetaModel" name="BasicMetaModel">
-<area shape="rect" id="node1" title=" " alt="" coords="5,100,124,127"/>
-<area shape="rect" id="node2" title=" " alt="" coords="172,5,363,61"/>
-<area shape="rect" id="node4" title=" " alt="" coords="177,85,357,141"/>
-<area shape="rect" id="node6" href="$classMetaModel.html" title=" " alt="" coords="184,166,351,207"/>
-<area shape="rect" id="node3" href="$classMetaGraphModel.html" title=" " alt="" coords="411,20,617,47"/>
-<area shape="rect" id="node5" href="$classMetaGridModel.html" title=" " alt="" coords="416,100,612,127"/>
+<area shape="rect" id="node1" title=" " coords="5,99,124,124"/>
+<area shape="rect" id="node2" title=" " coords="172,5,363,60"/>
+<area shape="rect" id="node4" title=" " coords="177,84,357,139"/>
+<area shape="rect" id="node6" href="$classMetaModel.html" title=" " coords="184,163,351,203"/>
+<area shape="rect" id="node3" href="$classMetaGraphModel.html" title=" " coords="411,20,617,45"/>
+<area shape="rect" id="node5" href="$classMetaGridModel.html" title=" " coords="416,99,612,124"/>
 </map>
