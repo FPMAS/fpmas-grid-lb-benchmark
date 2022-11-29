@@ -105,7 +105,7 @@ the rendering tools.
 
 | small_world.yml | grid.yml |
 |-----------------|----------|
-| ![Small World DOT](examples/dot/small_world/small_world.png) | ![Small World DOT](examples/dot/small_world/small_world.png) |
+| ![Small World DOT](examples/dot/small_world/small_world.png) | ![Grid DOT](examples/dot/grid/grid.png) |
 
 - Diamonds represent `Cells`
 - Circles represent `Agents`
