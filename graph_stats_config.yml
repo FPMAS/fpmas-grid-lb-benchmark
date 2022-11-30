@@ -1,3 +1,4 @@
+# List of environments to test
 [
   {
     environment: GRID,
@@ -20,4 +21,5 @@
     output_degree: 8,
     p: 0.1
   }
+  # ...
 ]

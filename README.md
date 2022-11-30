@@ -11,9 +11,9 @@ Several types of base graphs are provided by FPMAS:
 - Clustered graphs
 - Small-World networks
 
-Those graphs can easily be configured with a provided node count and average
-outgoing neighbors count. Each one can then be used to define a pure graph
-model, or as a spatial environment on which agents are moving.
+Those graphs can easily be configured with a provided node count and an average
+outgoing neighbors count. Each graph can then be used to define a pure graph
+model, or as a spatial environment on which agents are randomly moving.
 
 Agents can move uniformly, or according to an utility value assigned to each
 cell, in order to define spatial models with a non-uniform agent distribution,
@@ -101,7 +101,7 @@ for relatively small models.
 
 Examples of DOT rendering with the `fdp` tool for example configurations in
 `examples/dot` are presented below. See the `graphviz` manual pages to configure
-the rendering tools.
+the rendering tools, or directly modify the generated `.dot` files.
 
 | small_world.yml | grid.yml |
 |-----------------|----------|
@@ -119,7 +119,29 @@ we can see that agent gather around those coordinates. It is the purpose of the
 _MetaModel_ to easily produce those mechanics so the behavior of load balancing
 algorithms can be studied.
 
-# Contact
+## Graph stats
+
+The `fpmas-metamodel-graph-stats` tool can be used to easily generate different
+environment to dump them to DOT files and to compute some graph statistics such
+as the average shortest path length, clustering coefficient, centrality or size
+of the biggest connected components.
+
+```
+mpiexec -n <N> ./fpmas-metamodel-graph-stats -i -s <seed> <graph_stats_config.yml>
+```
+- `N`: processes count
+- `graph_stats_config`: a `.yml` configuration file. See [graph_stats_config.yml](blob/master/graph_stats_config.yml) for a simple example.
+- `seed` (optional): a random seed that can be used to generate different graphs
+  with the same FPMAS graph generators configuration.
+- `-i`: if specified, only the initialisation and the DOT output of each graph
+  is performed, without requiring FPMAS to output graph statistics.
+
+Currently, FPMAS features about graph statistics are relatively experimental, so
+we recommend to use the `-i` option. The excellent Python
+[graph-tool](https://graph-tool.skewed.de/) can be used instead to compute many
+statistics from the generated DOT files.
+
+## Contact
 
 For more information about this model or its implementation, please contact:
 - Paul Breugnot (developer): paul.breugnot@univ-fcomte.fr
